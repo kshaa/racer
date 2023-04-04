@@ -4,6 +4,7 @@ members = [
     "engine",
     "server",
     "shared",
+    "web/tauri",
 ]
 
 # Enable a small amount of optimization in debug mode
