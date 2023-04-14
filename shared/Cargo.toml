@@ -10,3 +10,6 @@ serde = { version = "1.0.152", features = ["serde_derive"] }
 uuid = { version = "1.3.0", features = ["v4", "serde"] }
 serde_json = "*"
 derive_more = { version = "0.99.17" }
+
+[lib]
+name = "shared"

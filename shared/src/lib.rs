@@ -1,6 +1,6 @@
-use serde::{Serialize, Deserialize};
-use uuid::Uuid;
 use derive_more::Display;
+use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 
 #[derive(Serialize, Deserialize, Debug, Clone, Display, Eq, PartialEq, Hash)]
 pub struct PlayerId(pub Uuid);
@@ -44,19 +44,19 @@ impl RoomId {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct PlayerMessage {
     pub address: PlayerId,
-    pub message: String // Bevy JSON message
+    pub message: String, // Bevy JSON message
 }
 impl PlayerMessage {
     pub fn to(to: PlayerId, message: String) -> PlayerMessage {
         PlayerMessage {
             address: to,
-            message
+            message,
         }
     }
     pub fn from(from: PlayerId, message: String) -> PlayerMessage {
         PlayerMessage {
             address: from,
-            message
+            message,
         }
     }
 }

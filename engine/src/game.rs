@@ -1,14 +1,12 @@
 use bevy::prelude::*;
 use bevy_ggrs::{GGRSPlugin, PlayerInputs, Session};
+#[cfg(feature = "world_debug")]
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 #[cfg(feature = "debug_lines")]
 use bevy_prototype_debug_lines::*;
 use bevy_rapier2d::prelude::*;
 use bevy_rapier2d::rapier::prelude::PhysicsPipeline;
 use ggrs::{P2PSession, PlayerType, SessionBuilder};
-use shared::*;
-use url::Url;
-use uuid::uuid;
 
 use crate::car::*;
 use crate::colors::*;
@@ -47,7 +45,7 @@ pub fn build_game(game: &mut App, config: GameConfig) {
     game.add_plugin(WorldInspectorPlugin);
 
     // Synchronized game logic stage
-    let mut game_stage = SystemStage::parallel().with_system(keyboard_based_tire_acceleration);
+    let game_stage = SystemStage::parallel().with_system(keyboard_based_tire_acceleration);
 
     // Synchronized game schedule
     let mut synchronized_schedule = Schedule::default();

@@ -2,10 +2,45 @@ import Head from 'next/head'
 import Image from 'next/image'
 import { Inter } from 'next/font/google'
 import styles from '@/styles/Home.module.css'
+import { invoke } from '@tauri-apps/api/tauri'
+import Button from '@mui/material/Button';
+import TextField from "@mui/material/TextField";
+import Stack from "@mui/material/Stack";
+import Checkbox from "@mui/material/Checkbox";
+import {FormControlLabel, Typography} from "@mui/material";
+import {useState} from "react";
 
 const inter = Inter({ subsets: ['latin'] })
 
 export default function Home() {
+  const [isMainPlayer, setIsMainPlayer] = useState(false);
+  const onMainPlayerChange = (e: any) => setIsMainPlayer(!isMainPlayer);
+  const [player0, setPlayer0] = useState("");
+  const onPlayer0Change = (e: any) => setPlayer0(e.target.value);
+  const [player1, setPlayer1] = useState("");
+  const onPlayer1Change = (e: any) => setPlayer1(e.target.value);
+  const [roomId, setRoomId] = useState("");
+  const onRoomChange = (e: any) => setRoomId(e.target.value);
+
+  const isClient = typeof window !== 'undefined'
+  const onSubmit = () => {
+    if (isClient) {
+      const args = {
+        isMainPlayer: isMainPlayer,
+        playerId0Json: `"${player0}"`,
+        playerId1Json: `"${player1}"`,
+        roomIdJson: `"${roomId}"`,
+      };
+      invoke(
+        'join_game',
+        args
+      ).then(console.log).catch(console.error)
+    } else {
+      alert("Only implemented in native client")
+    }
+  };
+
+
   return (
     <>
       <Head>
@@ -15,108 +50,22 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main className={styles.main}>
-        <div className={styles.description}>
-          <p>
-            Get started by editing&nbsp;
-            <code className={styles.code}>src/pages/index.tsx</code>
-          </p>
-          <div>
-            <a
-              href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              By{' '}
-              <Image
-                src="/vercel.svg"
-                alt="Vercel Logo"
-                className={styles.vercelLogo}
-                width={100}
-                height={24}
-                priority
-              />
-            </a>
-          </div>
-        </div>
-
-        <div className={styles.center}>
-          <Image
-            className={styles.logo}
-            src="/next.svg"
-            alt="Next.js Logo"
-            width={180}
-            height={37}
-            priority
-          />
-          <div className={styles.thirteen}>
-            <Image
-              src="/thirteen.svg"
-              alt="13"
-              width={40}
-              height={31}
-              priority
-            />
-          </div>
-        </div>
-
-        <div className={styles.grid}>
-          <a
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <h2 className={inter.className}>
-              Docs <span>-&gt;</span>
-            </h2>
-            <p className={inter.className}>
-              Find in-depth information about Next.js features and&nbsp;API.
-            </p>
-          </a>
-
-          <a
-            href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <h2 className={inter.className}>
-              Learn <span>-&gt;</span>
-            </h2>
-            <p className={inter.className}>
-              Learn about Next.js in an interactive course with&nbsp;quizzes!
-            </p>
-          </a>
-
-          <a
-            href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <h2 className={inter.className}>
-              Templates <span>-&gt;</span>
-            </h2>
-            <p className={inter.className}>
-              Discover and deploy boilerplate example Next.js&nbsp;projects.
-            </p>
-          </a>
-
-          <a
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <h2 className={inter.className}>
-              Deploy <span>-&gt;</span>
-            </h2>
-            <p className={inter.className}>
-              Instantly deploy your Next.js site to a shareable URL
-              with&nbsp;Vercel.
-            </p>
-          </a>
-        </div>
+        <Stack spacing={2} sx={{ width: "100%", maxWidth: "500px", marginTop: "5rem" }}>
+          <Typography variant="h3">Join game</Typography>
+          <FormControlLabel
+            value={isMainPlayer} onChange={onMainPlayerChange}
+            control={<Checkbox defaultChecked id="is-main-player" />} label="Is main player" />
+          <TextField
+            value={roomId} onChange={onRoomChange}
+            required={true} id="room-id" label="Room ID" variant="outlined" />
+          <TextField
+            value={player0} onChange={onPlayer0Change}
+            required={true} id="player-0" label="Player #0 ID" variant="outlined" />
+          <TextField
+            value={player1} onChange={onPlayer1Change}
+            required={true} id="player-1" label="Player #1 ID" variant="outlined" />
+          <Button onClick={onSubmit} variant="contained">Start</Button>
+        </Stack>
       </main>
     </>
   )

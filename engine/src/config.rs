@@ -46,10 +46,6 @@ impl GameConfig {
         pixels_per_meter * meters
     }
 
-    pub fn meters2pix(&self, meters: f32) -> f32 {
-        GameConfig::_meters2pix(self.pixels_per_meter, meters)
-    }
-
     pub fn default(network: NetworkConfig, players: Vec<NetworkPlayer>) -> GameConfig {
         let ppm = 10.0;
         let m2p = |meters: f32| GameConfig::_meters2pix(ppm, meters);

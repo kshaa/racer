@@ -6,3 +6,9 @@
 `web` - `Next.js` UI app i.e. launcher for `engine`  
 `engine` - `bevy` game app  
 `server` - `actix` server for networking   
+
+
+## Development
+
+- Start `server` with `cargo run --bin zoop-server`
+- Start `web` with `cargo tauri dev`

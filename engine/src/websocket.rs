@@ -13,6 +13,10 @@ pub struct NonBlockingWebSocket {
     receiver: Arc<Mutex<WrappedWsReceiver>>,
 }
 
+// Might blow up
+unsafe impl Send for NonBlockingWebSocket {}
+unsafe impl Sync for NonBlockingWebSocket {}
+
 struct WrappedWsSender(WsSender);
 impl fmt::Debug for WrappedWsSender {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {

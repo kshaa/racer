@@ -30,10 +30,6 @@ impl Controls {
         (self.input & INPUT_STEER_LEFT) != 0
     }
 
-    pub fn none() -> Controls {
-        Controls::zeroed()
-    }
-
     pub fn steering_any(&self) -> bool {
         self.steering_right() || self.steering_left()
     }
@@ -75,17 +71,6 @@ impl Controls {
             KeyCode::C,
             KeyCode::D,
             KeyCode::A,
-        )
-    }
-
-    pub fn from_ijkl(input: &Input<KeyCode>) -> Controls {
-        Controls::from_keys(
-            input,
-            KeyCode::I,
-            KeyCode::K,
-            KeyCode::N,
-            KeyCode::L,
-            KeyCode::J,
         )
     }
 }
