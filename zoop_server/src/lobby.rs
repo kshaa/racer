@@ -2,7 +2,7 @@ use crate::error::*;
 use crate::room::*;
 use actix::*;
 use actix_web::Result;
-use shared::RoomId;
+use zoop_shared::RoomId;
 use std::collections::HashMap;
 
 /// Game room metadata

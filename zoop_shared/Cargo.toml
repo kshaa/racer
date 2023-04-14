@@ -1,5 +1,5 @@
 [package]
-name = "shared"
+name = "zoop_shared"
 version = "0.1.0"
 edition = "2021"
 
@@ -12,4 +12,4 @@ serde_json = "*"
 derive_more = { version = "0.99.17" }
 
 [lib]
-name = "shared"
+name = "zoop_shared"

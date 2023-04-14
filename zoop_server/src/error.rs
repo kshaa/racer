@@ -4,7 +4,7 @@ use actix_web::HttpResponse;
 use actix_web_actors::ws::{CloseCode, CloseReason};
 use derive_more::Display;
 use serde::{Deserialize, Serialize};
-use shared::RoomId;
+use zoop_shared::RoomId;
 
 /// Server errors
 #[derive(Serialize, Deserialize, Debug, Display, derive_more::Error)]

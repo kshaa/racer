@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "tauri": "tauri",
+    "tauri": "zoop_tauri",
     "lint": "next lint"
   },
   "dependencies": {

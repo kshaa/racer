@@ -1,6 +1,6 @@
 use ewebsock::{Error, WsEvent, WsMessage, WsReceiver, WsSender};
 use ggrs::{Message, NonBlockingSocket};
-use shared::{PlayerId, PlayerMessage};
+use zoop_shared::{PlayerId, PlayerMessage};
 use std::fmt;
 use std::fmt::Formatter;
 use std::sync::{Arc, Mutex};

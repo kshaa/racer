@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use shared::{NetworkPlayer, PlayerId, RoomId};
+use zoop_shared::{NetworkPlayer, PlayerId, RoomId};
 use url::Url;
 
 mod car;
@@ -15,7 +15,7 @@ mod sync;
 mod websocket;
 use crate::game::*;
 
-pub async fn networked_game(
+pub fn networked_game(
     is_main_player: bool,
     player_id_0: PlayerId,
     player_id_1: PlayerId,

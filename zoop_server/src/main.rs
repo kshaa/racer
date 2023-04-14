@@ -8,7 +8,7 @@ use actix_web::HttpResponse;
 use actix_web::HttpServer;
 use actix_web::{get, Result};
 use actix_web_actors::ws;
-use shared::*;
+use zoop_shared::*;
 use std::sync::Mutex;
 use uuid::{uuid, Uuid};
 mod error;

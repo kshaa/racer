@@ -1,11 +1,11 @@
 [workspace]
 resolver = "2"
 members = [
-    "cli",
-    "engine",
-    "server",
-    "shared",
-    "web/tauri",
+    "zoop_cli",
+    "zoop_engine",
+    "zoop_server",
+    "zoop_shared",
+    "zoop_web/zoop_tauri",
 ]
 
 # Enable a small amount of optimization in debug mode

@@ -1,7 +1,7 @@
 use crate::math::*;
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
-use shared::{NetworkPlayer, PlayerId, RoomId};
+use zoop_shared::{NetworkPlayer, PlayerId, RoomId};
 use url::{ParseError, Url};
 
 #[derive(Clone)]

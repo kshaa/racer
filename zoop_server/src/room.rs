@@ -1,7 +1,7 @@
 use crate::error::*;
 use crate::player::*;
 use actix::*;
-use shared::{PlayerId, PlayerMessage, RoomId};
+use zoop_shared::{PlayerId, PlayerMessage, RoomId};
 use std::collections::HashMap;
 
 /// Game room comms

@@ -404,19 +404,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "224afbd727c3d6e4b90103ece64b8d1b67fbb1973b1046c2281eed3f3803f800"
 
 [[package]]
-name = "app"
-version = "0.1.0"
-dependencies = [
- "engine",
- "serde",
- "serde_json",
- "shared",
- "tauri",
- "tauri-build",
- "uuid 1.3.0",
-]
-
-[[package]]
 name = "approx"
 version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1666,18 +1653,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "cli"
-version = "0.1.0"
-dependencies = [
- "clap",
- "engine",
- "shared",
- "tokio",
- "url",
- "uuid 1.3.0",
-]
-
-[[package]]
 name = "clipboard-win"
 version = "4.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2248,27 +2223,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "071a31f4ee85403370b58aca746f01041ede6f0da2730960ad001edc2b71b394"
 dependencies = [
  "cfg-if",
-]
-
-[[package]]
-name = "engine"
-version = "0.1.0"
-dependencies = [
- "bevy",
- "bevy-inspector-egui",
- "bevy_ggrs",
- "bevy_prototype_debug_lines",
- "bevy_rapier2d",
- "bincode",
- "bytemuck",
- "ewebsock",
- "ggrs",
- "nalgebra",
- "serde",
- "serde_json",
- "shared",
- "url",
- "uuid 1.3.0",
 ]
 
 [[package]]
@@ -5059,22 +5013,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "server"
-version = "0.1.0"
-dependencies = [
- "actix",
- "actix-broker",
- "actix-files",
- "actix-web",
- "actix-web-actors",
- "derive_more",
- "serde",
- "serde_json",
- "shared",
- "uuid 1.3.0",
-]
-
-[[package]]
 name = "servo_arc"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5139,16 +5077,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "900fba806f70c630b0a382d0d825e17a0f19fcd059a2ade1ff237bcddf446b31"
 dependencies = [
  "lazy_static",
-]
-
-[[package]]
-name = "shared"
-version = "0.1.0"
-dependencies = [
- "derive_more",
- "serde",
- "serde_json",
- "uuid 1.3.0",
 ]
 
 [[package]]
@@ -6900,6 +6828,81 @@ name = "xi-unicode"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a67300977d3dc3f8034dae89778f502b6ba20b269527b3223ba59c0cf393bb8a"
+
+[[package]]
+name = "zoop_cli"
+version = "0.1.0"
+dependencies = [
+ "clap",
+ "tokio",
+ "url",
+ "uuid 1.3.0",
+ "zoop_engine",
+ "zoop_shared",
+]
+
+[[package]]
+name = "zoop_engine"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "bevy-inspector-egui",
+ "bevy_ggrs",
+ "bevy_prototype_debug_lines",
+ "bevy_rapier2d",
+ "bincode",
+ "bytemuck",
+ "ewebsock",
+ "ggrs",
+ "nalgebra",
+ "serde",
+ "serde_json",
+ "url",
+ "uuid 1.3.0",
+ "zoop_shared",
+]
+
+[[package]]
+name = "zoop_gui"
+version = "0.1.0"
+dependencies = [
+ "clap",
+ "serde",
+ "serde_json",
+ "tauri",
+ "tauri-build",
+ "tokio",
+ "uuid 1.3.0",
+ "zoop_cli",
+ "zoop_engine",
+ "zoop_shared",
+]
+
+[[package]]
+name = "zoop_server"
+version = "0.1.0"
+dependencies = [
+ "actix",
+ "actix-broker",
+ "actix-files",
+ "actix-web",
+ "actix-web-actors",
+ "derive_more",
+ "serde",
+ "serde_json",
+ "uuid 1.3.0",
+ "zoop_shared",
+]
+
+[[package]]
+name = "zoop_shared"
+version = "0.1.0"
+dependencies = [
+ "derive_more",
+ "serde",
+ "serde_json",
+ "uuid 1.3.0",
+]
 
 [[package]]
 name = "zstd"

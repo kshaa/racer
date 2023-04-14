@@ -27,9 +27,9 @@ export default function Home() {
     if (isClient) {
       const args = {
         isMainPlayer: isMainPlayer,
-        playerId0Json: `"${player0}"`,
-        playerId1Json: `"${player1}"`,
-        roomIdJson: `"${roomId}"`,
+        player0Uuid: player0,
+        player1Uuid: player1,
+        roomUuid: roomId
       };
       invoke(
         'join_game',

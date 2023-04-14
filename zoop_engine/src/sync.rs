@@ -1,7 +1,7 @@
 use crate::controls::Controls;
 use bevy::prelude::Component;
 use ggrs::Config;
-use shared::PlayerId;
+use zoop_shared::PlayerId;
 
 #[derive(Debug)]
 pub struct GGRSConfig;
