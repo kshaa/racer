@@ -1,45 +1,56 @@
 import Head from 'next/head'
-import Image from 'next/image'
-import { Inter } from 'next/font/google'
 import styles from '@/styles/Home.module.css'
-import { invoke } from '@tauri-apps/api/tauri'
 import Button from '@mui/material/Button';
 import TextField from "@mui/material/TextField";
 import Stack from "@mui/material/Stack";
 import Checkbox from "@mui/material/Checkbox";
 import {FormControlLabel, Typography} from "@mui/material";
 import {useState} from "react";
-
-const inter = Inter({ subsets: ['latin'] })
+import {pipe} from "fp-ts/function";
+import {RoomJoin, validateRoomJoin} from "@/domain/roomJoin";
+import * as E from "fp-ts/Either";
+import {stringify as uuidStringify} from "uuid";
+import {useRouter} from "next/router";
 
 export default function Home() {
+  const [errors, setErrors] = useState(new Map<string, string>());
+  const flushErrors = () => setErrors(new Map())
   const [isMainPlayer, setIsMainPlayer] = useState(false);
-  const onMainPlayerChange = (e: any) => setIsMainPlayer(!isMainPlayer);
+  const onMainPlayerChange = (e: any) => flushErrors() || setIsMainPlayer(!isMainPlayer);
   const [player0, setPlayer0] = useState("");
-  const onPlayer0Change = (e: any) => setPlayer0(e.target.value);
+  const onPlayer0Change = (e: any) => flushErrors() || setPlayer0(e.target.value);
   const [player1, setPlayer1] = useState("");
-  const onPlayer1Change = (e: any) => setPlayer1(e.target.value);
+  const onPlayer1Change = (e: any) => flushErrors() || setPlayer1(e.target.value);
   const [roomId, setRoomId] = useState("");
-  const onRoomChange = (e: any) => setRoomId(e.target.value);
+  const onRoomChange = (e: any) => flushErrors() || setRoomId(e.target.value);
+  const router = useRouter()
 
-  const isClient = typeof window !== 'undefined'
   const onSubmit = () => {
-    if (isClient) {
-      const args = {
-        isMainPlayer: isMainPlayer,
-        player0Uuid: player0,
-        player1Uuid: player1,
-        roomUuid: roomId
-      };
-      invoke(
-        'join_game',
-        args
-      ).then(console.log).catch(console.error)
-    } else {
-      alert("Only implemented in native client")
-    }
-  };
-
+    pipe(
+      validateRoomJoin(
+        isMainPlayer,
+        player0,
+        player1,
+        roomId,
+        "player0",
+        "player1",
+        "roomId",
+      ),
+      E.match<Map<string, string>, RoomJoin>(
+        (errors) => setErrors(errors),
+        ({ room, isMainPlayer, player0, player1 }) =>
+          router.push({
+            pathname: '/room/[roomId]',
+            query: {
+              isMainPlayer,
+              player0: uuidStringify(player0.value),
+              player1: uuidStringify(player1.value),
+              roomId: uuidStringify(room.value),
+            }
+          })
+      )
+    )
+  }
 
   return (
     <>
@@ -56,17 +67,24 @@ export default function Home() {
             value={isMainPlayer} onChange={onMainPlayerChange}
             control={<Checkbox defaultChecked id="is-main-player" />} label="Is main player" />
           <TextField
+            error={errors.has("roomId")}
+            helperText={errors.get("roomId")}
             value={roomId} onChange={onRoomChange}
-            required={true} id="room-id" label="Room ID" variant="outlined" />
+            required={true} id="roomId" label="Room ID" variant="outlined" />
           <TextField
+            error={errors.has("player0")}
+            helperText={errors.get("player0")}
             value={player0} onChange={onPlayer0Change}
-            required={true} id="player-0" label="Player #0 ID" variant="outlined" />
+            required={true} id="player0" label="Player #0 ID" variant="outlined" />
           <TextField
+            error={errors.has("player1")}
+            helperText={errors.get("player1")}
             value={player1} onChange={onPlayer1Change}
-            required={true} id="player-1" label="Player #1 ID" variant="outlined" />
+            required={true} id="player1" label="Player #1 ID" variant="outlined" />
           <Button onClick={onSubmit} variant="contained">Start</Button>
         </Stack>
       </main>
     </>
   )
 }
+

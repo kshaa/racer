@@ -34,3 +34,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Compiled game engine
+public/*.wasm
+src/services/zoop_engine.d.ts
+src/services/zoop_engine.js

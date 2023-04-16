@@ -19,6 +19,11 @@ use crate::tire::*;
 use crate::websocket::*;
 
 pub fn build_game(game: &mut App, config: GameConfig) {
+    // Log panics in browser console
+    #[cfg(target_arch = "wasm32")]
+    #[cfg(feature = "console_errors")]
+    console_error_panic_hook::set_once();
+
     // Generic game resources
     game.insert_resource(config.clone())
         .insert_resource(ClearColor(ZOOP_YELLOW));
