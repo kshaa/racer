@@ -15,7 +15,7 @@ import {useRouter} from "next/router";
 export default function Home() {
   const [errors, setErrors] = useState(new Map<string, string>());
   const flushErrors = () => setErrors(new Map())
-  const [isMainPlayer, setIsMainPlayer] = useState(false);
+  const [isMainPlayer, setIsMainPlayer] = useState(true);
   const onMainPlayerChange = (e: any) => flushErrors() || setIsMainPlayer(!isMainPlayer);
   const [player0, setPlayer0] = useState("");
   const onPlayer0Change = (e: any) => flushErrors() || setPlayer0(e.target.value);

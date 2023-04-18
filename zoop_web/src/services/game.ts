@@ -5,26 +5,39 @@ import {isTauriClient} from "@/services/tauri";
 import {RoomJoin} from "@/domain/roomJoin";
 
 export function joinRoom(
-  roomDetails: RoomJoin
+  roomDetails: RoomJoin,
+  canvasSelector: string
 ) {
   if (isTauriClient) {
     joinRoomNative(roomDetails)
   } else {
-    joinRoomWasm(roomDetails)
+    joinRoomWasm(roomDetails, canvasSelector)
   }
 }
 
-export function joinRoomWasm(roomDetails: RoomJoin) {
+export function joinRoomWasm(roomDetails: RoomJoin, canvasSelector: string) {
   fetch("/zoop_engine_bg.wasm")
     .then((response) => response.arrayBuffer())
-    .then((bytes) => init(bytes))
+    .then((bytes) => init(bytes).catch((error) => {
+      if (!error.message.startsWith("Using exceptions for control flow,")) {
+        throw error;
+      }
+    }))
     .then((_) => {
-      networked_game_raw(
-        roomDetails.isMainPlayer,
-        uuidStringify(roomDetails.player0.value),
-        uuidStringify(roomDetails.player1.value),
-        uuidStringify(roomDetails.room.value)
-      )
+      try {
+        console.log("Is main", roomDetails.isMainPlayer)
+        networked_game_raw(
+          roomDetails.isMainPlayer,
+          uuidStringify(roomDetails.player0.value),
+          uuidStringify(roomDetails.player1.value),
+          uuidStringify(roomDetails.room.value),
+          canvasSelector,
+        )
+      } catch (error) {
+        if (!error.message.startsWith("Using exceptions for control flow,")) {
+          throw error;
+        }
+      }
     })
 }
 

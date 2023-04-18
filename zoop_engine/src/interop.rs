@@ -12,6 +12,7 @@ pub fn networked_game_raw(
     player_0_uuid: String,
     player_1_uuid: String,
     room_uuid: String,
+    canvas_selector: Option<String>,
 ) {
     let player_id_0 = PlayerId(Uuid::parse_str(&player_0_uuid).unwrap());
     let player_id_1 = PlayerId(Uuid::parse_str(&player_1_uuid).unwrap());
@@ -21,7 +22,8 @@ pub fn networked_game_raw(
         is_main_player,
         player_id_0,
         player_id_1,
-        room_id
+        room_id,
+        canvas_selector,
     )
 }
 
@@ -30,6 +32,7 @@ pub fn networked_game(
     player_id_0: PlayerId,
     player_id_1: PlayerId,
     room_id: RoomId,
+    canvas_selector: Option<String>,
 ) {
     // Define players
     let player_0 = NetworkPlayer {
@@ -53,11 +56,10 @@ pub fn networked_game(
     };
 
     // Build game
-    let config = GameConfig::default(network, players.clone());
+    let config = GameConfig::default(network, players, canvas_selector);
     let mut game = App::new();
     build_game(&mut game, config);
 
     // Run game
-    println!("Running game");
     game.run();
 }

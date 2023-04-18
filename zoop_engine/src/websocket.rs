@@ -3,6 +3,7 @@ use ggrs::{Message, NonBlockingSocket};
 use zoop_shared::{PlayerId, PlayerMessage};
 use std::fmt;
 use std::fmt::Formatter;
+use std::ptr::write;
 use std::sync::{Arc, Mutex};
 
 /// A simple non-blocking WebSocket connection to use with GGRS Sessions
@@ -17,14 +18,34 @@ pub struct NonBlockingWebSocket {
 unsafe impl Send for NonBlockingWebSocket {}
 unsafe impl Sync for NonBlockingWebSocket {}
 
-struct WrappedWsSender(WsSender);
+struct WrappedWsSender {
+    underlying: WsSender,
+    opened: bool,
+}
+impl WrappedWsSender {
+    fn new(underlying: WsSender) -> WrappedWsSender {
+        WrappedWsSender {
+            underlying,
+            opened: false,
+        }
+    }
+}
 impl fmt::Debug for WrappedWsSender {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(f, "WrappedWsSender")
     }
 }
 
-struct WrappedWsReceiver(WsReceiver);
+struct WrappedWsReceiver {
+    underlying: WsReceiver
+}
+impl WrappedWsReceiver {
+    fn new(underlying: WsReceiver) -> WrappedWsReceiver {
+        WrappedWsReceiver {
+            underlying
+        }
+    }
+}
 impl fmt::Debug for WrappedWsReceiver {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(f, "WrappedWsReceiver")
@@ -39,8 +60,10 @@ impl NonBlockingWebSocket {
             Err(e) => return Err(e),
         };
 
-        let wrapped_sender = Arc::new(Mutex::new(WrappedWsSender(sender)));
-        let wrapped_receiver = Arc::new(Mutex::new(WrappedWsReceiver(receiver)));
+        let wrapped_sender =
+            Arc::new(Mutex::new(WrappedWsSender::new(sender)));
+        let wrapped_receiver =
+            Arc::new(Mutex::new(WrappedWsReceiver::new(receiver)));
 
         Ok(Self {
             address,
@@ -52,12 +75,15 @@ impl NonBlockingWebSocket {
 
 impl NonBlockingSocket<PlayerId> for NonBlockingWebSocket {
     fn send_to(&mut self, msg: &Message, addr: &PlayerId) {
-        // I could guarantee that writes work w/ a queue, but GGIO doesn't expect reliablity anyway, so no need to bother
+        // GGIO expects an unreliable transport
+        // so write failures are just ignored
         if let Ok(mut writer) = self.sender.lock() {
             let message = serde_json::to_string(msg).unwrap();
             let player_message =
                 serde_json::to_string(&PlayerMessage::to(addr.clone(), message)).unwrap();
-            writer.0.send(WsMessage::Text(player_message));
+            if writer.opened {
+                writer.underlying.send(WsMessage::Text(player_message));
+            }
         }
     }
 
@@ -66,7 +92,7 @@ impl NonBlockingSocket<PlayerId> for NonBlockingWebSocket {
 
         // This might fail, but no worries, GGIO will try again later
         if let (Ok(mut sender), Ok(receiver)) = (self.sender.lock(), self.receiver.lock()) {
-            while let Some(event) = receiver.0.try_recv() {
+            while let Some(event) = receiver.underlying.try_recv() {
                 match event {
                     WsEvent::Message(WsMessage::Binary(e)) => panic!(
                         "Websocket received unexpected binary from {}: {:?}",
@@ -80,7 +106,11 @@ impl NonBlockingSocket<PlayerId> for NonBlockingWebSocket {
                         "Websocket received unexpected pong from {}: {:?}",
                         &self.address, p
                     ),
-                    WsEvent::Message(WsMessage::Ping(p)) => sender.0.send(WsMessage::Pong(p)),
+                    WsEvent::Message(WsMessage::Ping(p)) => {
+                        if sender.opened {
+                            sender.underlying.send(WsMessage::Pong(p))
+                        }
+                     },
                     WsEvent::Message(WsMessage::Text(text)) => {
                         let from_player_message: PlayerMessage =
                             serde_json::from_str(text.as_str()).unwrap();
@@ -91,7 +121,9 @@ impl NonBlockingSocket<PlayerId> for NonBlockingWebSocket {
                     }
                     WsEvent::Error(e) => panic!("Websocket error for {}: {:?}", &self.address, e),
                     WsEvent::Closed => panic!("Websocket closed for {:?}", &self.address),
-                    WsEvent::Opened => (), // Ignore
+                    WsEvent::Opened => {
+                        sender.opened = true
+                    }, // Ignore
                 }
             }
         }

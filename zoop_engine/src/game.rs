@@ -22,7 +22,12 @@ pub fn build_game(game: &mut App, config: GameConfig) {
     // Log panics in browser console
     #[cfg(target_arch = "wasm32")]
     #[cfg(feature = "console_errors")]
-    console_error_panic_hook::set_once();
+    {
+        console_error_panic_hook::set_once();
+        wasm_logger::init(wasm_logger::Config::default());
+    }
+
+    info!("Starting game with config {:?}", config);
 
     // Generic game resources
     game.insert_resource(config.clone())
@@ -42,8 +47,14 @@ pub fn build_game(game: &mut App, config: GameConfig) {
     #[cfg(feature = "rapier_debug_physics")]
     game.add_plugin(RapierDebugRenderPlugin::default());
 
-    // Defauly Bevy plugins
-    game.add_plugins(DefaultPlugins);
+    // Default Bevy plugins
+    game.add_plugins(DefaultPlugins.set(WindowPlugin {
+        window: WindowDescriptor {
+            canvas: config.canvas_selector.clone(),
+            ..default()
+        },
+        ..default()
+    }));
 
     // Debug world inspector
     #[cfg(feature = "world_debug")]

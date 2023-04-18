@@ -1,14 +1,19 @@
 import Head from 'next/head'
 import styles from '@/styles/Home.module.css'
+import Alert from "@mui/material/Alert";
 import {useRouter} from 'next/router'
 import {RoomJoin, validateRoomJoin} from "@/domain/roomJoin"
 import * as O from 'fp-ts/Option'
-import { useWhenInit } from "@seamusleahy/init-hooks";
 import {joinRoom} from "@/services/game";
+import {useEffect} from "react";
+import {pipe} from "fp-ts/function";
+import {isTauriClient} from "@/services/tauri";
+import Link from "next/link";
 
 export default function Room() {
   const router = useRouter()
-  const isMainPlayer = (router.query.roomId as string) === "true"
+  const isRouterReady = Object.keys(router.query).length > 0
+  const isMainPlayer = (router.query.isMainPlayer as string) === "true"
   const player0 = router.query.player0 as string
   const player1 = router.query.player1 as string
   const roomId = router.query.roomId as string
@@ -21,13 +26,20 @@ export default function Room() {
     "player1",
     "roomId"
   )
-  let errors = O.getOrElse(() => new Map())(O.getLeft(validation))
+  let errors =
+    pipe(
+      O.getLeft(validation),
+      O.filter((_: Map<string, string>) => isRouterReady),
+      O.getOrElse(() => new Map())
+    )
+
   let roomJoin = O.getRight(validation)
-  useWhenInit(() => {
+  useEffect(() => {
     O.map<RoomJoin, void>((details) => {
-      joinRoom(details)
+      console.log("Joining room", details, performance.timing.navigationStart)
+      joinRoom(details, "#game")
     })(roomJoin)
-  })
+  }, [roomId]);
 
   return (
     <>
@@ -41,7 +53,12 @@ export default function Room() {
         {Array.from(errors.entries()).map(([key, error]) => {
           return (<Alert key={key} severity="error">{error}</Alert>)
         })}
-        <canvas id="game"></canvas>
+        {!isTauriClient &&
+            <canvas id="game"></canvas>
+        }
+        {isTauriClient &&
+            <Link href="/">Back to lobby</Link>
+        }
       </main>
     </>
   )

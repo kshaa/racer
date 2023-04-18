@@ -4,7 +4,7 @@ use bevy_rapier2d::prelude::*;
 use zoop_shared::{NetworkPlayer, PlayerId, RoomId};
 use url::{ParseError, Url};
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct NetworkConfig {
     pub server_address: Url,
     pub room: RoomId,
@@ -17,7 +17,7 @@ pub struct SerializedRapierContext {
     pub initialized: bool,
 }
 
-#[derive(Resource, Clone)]
+#[derive(Resource, Clone, Debug)]
 pub struct GameConfig {
     // Native Bevy units:
     // - distance in pixels
@@ -26,6 +26,7 @@ pub struct GameConfig {
     pub network: NetworkConfig,
     pub players: Vec<NetworkPlayer>,
     pub fps: u16,
+    pub canvas_selector: Option<String>,
     pub pixels_per_meter: f32,
     pub car_half_width: f32,
     pub car_half_length: f32,
@@ -46,13 +47,14 @@ impl GameConfig {
         pixels_per_meter * meters
     }
 
-    pub fn default(network: NetworkConfig, players: Vec<NetworkPlayer>) -> GameConfig {
+    pub fn default(network: NetworkConfig, players: Vec<NetworkPlayer>, canvas_selector: Option<String>) -> GameConfig {
         let ppm = 10.0;
         let m2p = |meters: f32| GameConfig::_meters2pix(ppm, meters);
         GameConfig {
             network,
             players,
             fps: 60,
+            canvas_selector,
             pixels_per_meter: ppm,
             car_half_width: m2p(1.0),
             car_half_length: m2p(2.0),

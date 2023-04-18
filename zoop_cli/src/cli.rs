@@ -32,7 +32,8 @@ pub async fn run_command(command: CLICommand) {
                 is_main_player,
                 PlayerId(player_id_0),
                 PlayerId(player_id_1),
-                RoomId(room_id));
+                RoomId(room_id),
+                None);
         },
     };
 }

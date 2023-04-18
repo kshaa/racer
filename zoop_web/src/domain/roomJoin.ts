@@ -37,7 +37,7 @@ export function validateRoomJoin(
   if (failures.size !== 0) return E.left(failures)
   else {
     const obj = Object.fromEntries(successes)
-    const player0: Uuid = obj[player1Key]
+    const player0: Uuid = obj[player0Key]
     const player1: Uuid = obj[player1Key]
     const roomId: Uuid = obj[roomKey]
     const rooomJoin: RoomJoin = {
