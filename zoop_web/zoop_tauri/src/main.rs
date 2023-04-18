@@ -3,12 +3,9 @@
     windows_subsystem = "windows"
 )]
 
-use std::process::Command;
-use tauri::Manager;
-use zoop_engine::networked_game;
-use zoop_shared::{PlayerId, RoomId};
-use uuid::{uuid, Uuid};
-use clap::{Parser, Subcommand};
+use zoop_shared::*;
+use uuid::Uuid;
+use clap::Parser;
 use zoop_cli::*;
 
 #[tokio::main]

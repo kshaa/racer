@@ -34,7 +34,8 @@ pub fn build_game(game: &mut App, config: GameConfig) {
         .insert_resource(ClearColor(ZOOP_YELLOW));
 
     // Physics plugin
-    game.insert_resource(config.rapier_config()).add_plugin(
+    game.insert_resource(config.rapier_config());
+    game.add_plugin(
         RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(config.pixels_per_meter)
             .with_default_system_setup(false),
     );
@@ -125,15 +126,33 @@ fn build_network(
         // define system that returns inputs given a player handle, so GGRS can send the inputs around
         .with_input_system(synchronized_input)
         // register types of components AND resources you want to be rolled back
-        .register_rollback_component::<Transform>()
+        // # physics
+        .register_rollback_component::<RigidBody>()
         .register_rollback_component::<Velocity>()
-        .register_rollback_component::<Damping>()
+        .register_rollback_component::<AdditionalMassProperties>()
+        .register_rollback_component::<ReadMassProperties>()
+        // .register_rollback_component::<MassProperties>()
+        .register_rollback_component::<LockedAxes>()
         .register_rollback_component::<ExternalForce>()
         .register_rollback_component::<ExternalImpulse>()
-        .register_rollback_component::<ReadMassProperties>()
         .register_rollback_component::<Sleeping>()
-        .register_rollback_component::<TireMeta>()
+        .register_rollback_component::<Damping>()
+        .register_rollback_component::<Dominance>()
+        .register_rollback_component::<Ccd>()
+        .register_rollback_component::<GravityScale>()
+        .register_rollback_component::<CollidingEntities>()
+        .register_rollback_component::<Sensor>()
+        .register_rollback_component::<Friction>()
+        .register_rollback_component::<Restitution>()
+        .register_rollback_component::<CollisionGroups>()
+        .register_rollback_component::<SolverGroups>()
+        .register_rollback_component::<ContactForceEventThreshold>()
+        .register_rollback_component::<Group>()
         .register_rollback_resource::<SerializedRapierContext>()
+        // # bevy
+        .register_rollback_component::<Transform>()
+        // # game
+        .register_rollback_component::<TireMeta>()
         // these systems will be executed as part of the advance frame update
         .with_rollback_schedule(synchronized_schedule)
         .build(game);
@@ -223,9 +242,9 @@ fn rapier_context_load(
         unserialized.impulse_joints = context.impulse_joints;
         unserialized.multibody_joints = context.multibody_joints;
         unserialized.ccd_solver = context.ccd_solver;
+        unserialized.pipeline = PhysicsPipeline::new();
         unserialized.query_pipeline = context.query_pipeline;
         unserialized.integration_parameters = context.integration_parameters;
-        unserialized.pipeline = PhysicsPipeline::new();
     }
 }
 

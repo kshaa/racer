@@ -3,7 +3,6 @@ use ggrs::{Message, NonBlockingSocket};
 use zoop_shared::{PlayerId, PlayerMessage};
 use std::fmt;
 use std::fmt::Formatter;
-use std::ptr::write;
 use std::sync::{Arc, Mutex};
 
 /// A simple non-blocking WebSocket connection to use with GGRS Sessions
@@ -75,7 +74,7 @@ impl NonBlockingWebSocket {
 
 impl NonBlockingSocket<PlayerId> for NonBlockingWebSocket {
     fn send_to(&mut self, msg: &Message, addr: &PlayerId) {
-        // GGIO expects an unreliable transport
+        // GGRS expects an unreliable transport
         // so write failures are just ignored
         if let Ok(mut writer) = self.sender.lock() {
             let message = serde_json::to_string(msg).unwrap();
@@ -90,7 +89,7 @@ impl NonBlockingSocket<PlayerId> for NonBlockingWebSocket {
     fn receive_all_messages(&mut self) -> Vec<(PlayerId, Message)> {
         let mut received_messages = Vec::new();
 
-        // This might fail, but no worries, GGIO will try again later
+        // This might fail, but no worries, GGRS will try again later
         if let (Ok(mut sender), Ok(receiver)) = (self.sender.lock(), self.receiver.lock()) {
             while let Some(event) = receiver.underlying.try_recv() {
                 match event {
