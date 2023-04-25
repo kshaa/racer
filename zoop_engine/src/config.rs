@@ -1,8 +1,10 @@
 use crate::math::*;
+use crate::sync::*;
+use crate::tire::{Tire, TirePhysics};
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
-use zoop_shared::{NetworkPlayer, PlayerId, RoomId};
 use url::{ParseError, Url};
+use zoop_shared::{NetworkPlayer, PlayerId, RoomId};
 
 #[derive(Clone, Debug)]
 pub struct NetworkConfig {
@@ -12,9 +14,136 @@ pub struct NetworkConfig {
 
 #[derive(Clone, Debug, Default, Resource, Reflect, FromReflect)]
 #[reflect(Resource)]
-pub struct SerializedRapierContext {
-    pub context: Vec<u8>,
-    pub initialized: bool,
+pub struct GamePhysicsProps {
+    pub transform: Transform,
+    pub velocity: Velocity,
+    pub force: ExternalForce,
+    pub impulse: ExternalImpulse,
+    pub mass: ReadMassProperties,
+}
+impl GamePhysicsProps {
+    pub fn of(
+        transform: Transform,
+        velocity: Velocity,
+        force: ExternalForce,
+        impulse: ExternalImpulse,
+        mass: ReadMassProperties,
+    ) -> GamePhysicsProps {
+        GamePhysicsProps {
+            transform,
+            velocity,
+            force,
+            impulse,
+            mass,
+        }
+    }
+    pub fn fixed(position: Vec3) -> GamePhysicsProps {
+        GamePhysicsProps {
+            transform: Transform::from_translation(position),
+            velocity: Velocity::zero(),
+            force: ExternalForce::default(),
+            impulse: ExternalImpulse::default(),
+            mass: ReadMassProperties::default(),
+        }
+    }
+}
+
+#[derive(Clone, Debug, Default, Resource, Reflect, FromReflect)]
+#[reflect(Resource)]
+pub struct GameTire {
+    pub tire_physics: TirePhysics,
+    pub entity_physics: GamePhysicsProps,
+}
+impl GameTire {
+    pub fn of(
+        transform: Transform,
+        velocity: Velocity,
+        force: ExternalForce,
+        impulse: ExternalImpulse,
+        mass: ReadMassProperties,
+        angle: f32,
+    ) -> GameTire {
+        GameTire {
+            tire_physics: TirePhysics { angle },
+            entity_physics: GamePhysicsProps::of(transform, velocity, force, impulse, mass),
+        }
+    }
+    pub fn fixed(position: Vec3) -> GameTire {
+        GameTire {
+            tire_physics: TirePhysics::default(),
+            entity_physics: GamePhysicsProps::fixed(position),
+        }
+    }
+}
+
+#[derive(Clone, Debug, Default, Resource, Reflect, FromReflect)]
+#[reflect(Resource)]
+pub struct GameCar {
+    pub tire_top_left: GameTire,
+    pub tire_top_right: GameTire,
+    pub tire_bottom_left: GameTire,
+    pub tire_bottom_right: GameTire,
+    pub physics: GamePhysicsProps,
+    pub player: Player,
+}
+impl GameCar {
+    pub fn fixed_for_player(
+        player: Player,
+        position: Vec3,
+        car_half_size: Vec2,
+        tire_half_size: Vec2,
+    ) -> GameCar {
+        GameCar {
+            tire_top_left: GameTire::fixed(Tire::position_for_car(
+                position,
+                car_half_size,
+                tire_half_size,
+                true,
+                false,
+            )),
+            tire_top_right: GameTire::fixed(Tire::position_for_car(
+                position,
+                car_half_size,
+                tire_half_size,
+                true,
+                true,
+            )),
+            tire_bottom_left: GameTire::fixed(Tire::position_for_car(
+                position,
+                car_half_size,
+                tire_half_size,
+                false,
+                false,
+            )),
+            tire_bottom_right: GameTire::fixed(Tire::position_for_car(
+                position,
+                car_half_size,
+                tire_half_size,
+                false,
+                true,
+            )),
+            physics: GamePhysicsProps::fixed(position),
+            player,
+        }
+    }
+}
+
+#[derive(Clone, Debug, Resource, Reflect, FromReflect)]
+#[reflect(Resource)]
+pub enum GameEntity {
+    Stub(),
+    Car(GameCar),
+}
+impl Default for GameEntity {
+    fn default() -> Self {
+        GameEntity::Stub()
+    }
+}
+
+#[derive(Clone, Debug, Default, Resource, Reflect, FromReflect)]
+#[reflect(Resource)]
+pub struct GameState {
+    pub entities: Vec<GameEntity>,
 }
 
 #[derive(Resource, Clone, Debug)]
@@ -37,7 +166,7 @@ pub struct GameConfig {
     pub tire_acceleration_force: f32,
     pub tire_reversing_force: f32,
     pub tire_breaking_force: f32,
-    pub tire_friction_pushback_percentage: f32,
+    pub tire_friction_force: f32,
     pub tire_linear_damping: f32,
     pub tire_angular_damping: f32,
 }
@@ -47,7 +176,11 @@ impl GameConfig {
         pixels_per_meter * meters
     }
 
-    pub fn default(network: NetworkConfig, players: Vec<NetworkPlayer>, canvas_selector: Option<String>) -> GameConfig {
+    pub fn default(
+        network: NetworkConfig,
+        players: Vec<NetworkPlayer>,
+        canvas_selector: Option<String>,
+    ) -> GameConfig {
         let ppm = 10.0;
         let m2p = |meters: f32| GameConfig::_meters2pix(ppm, meters);
         GameConfig {
@@ -62,10 +195,10 @@ impl GameConfig {
             tire_radius: m2p(0.4),
             tire_rotation_per_tick: deg2rad(15.0),
             tire_max_angle: deg2rad(35.0),
-            tire_acceleration_force: m2p(140.0),
-            tire_reversing_force: m2p(100.0),
-            tire_breaking_force: m2p(300.0),
-            tire_friction_pushback_percentage: 0.5,
+            tire_acceleration_force: m2p(14000.0),
+            tire_reversing_force: m2p(10000.0),
+            tire_breaking_force: m2p(30000.0),
+            tire_friction_force: 50.0,
             tire_linear_damping: 0.5,
             tire_angular_damping: 0.1,
         }

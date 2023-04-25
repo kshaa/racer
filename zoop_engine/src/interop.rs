@@ -1,10 +1,10 @@
-use wasm_bindgen::prelude::*;
-use bevy::prelude::*;
-use zoop_shared::{NetworkPlayer, PlayerId, RoomId};
-use url::Url;
-use uuid::Uuid;
 use crate::config::*;
 use crate::game::*;
+use bevy::prelude::*;
+use url::Url;
+use uuid::Uuid;
+use wasm_bindgen::prelude::*;
+use zoop_shared::{NetworkPlayer, PlayerId, RoomId};
 
 #[wasm_bindgen]
 pub fn networked_game_raw(

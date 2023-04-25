@@ -6,6 +6,7 @@ use nalgebra::ComplexField;
 
 pub fn tire_angle_change(
     tire_meta: &TireMeta,
+    tire_physics: &TirePhysics,
     controls: &Controls,
     max_steering_angle: f32,
     rotation_step: f32,
@@ -14,18 +15,18 @@ pub fn tire_angle_change(
         // Back wheels don't steer
         0.0
     } else {
-        if controls.steering_left() && tire_meta.angle < max_steering_angle {
+        if controls.steering_left() && tire_physics.angle < max_steering_angle {
             // Steering left
             rotation_step
-        } else if controls.steering_right() && tire_meta.angle > -max_steering_angle {
+        } else if controls.steering_right() && tire_physics.angle > -max_steering_angle {
             // Steering right
             -rotation_step
         } else if !controls.steering_any() {
             // Steering back to center
-            if tire_meta.angle < rotation_step && tire_meta.angle > -rotation_step {
+            if tire_physics.angle < rotation_step && tire_physics.angle > -rotation_step {
                 // Already at center
                 0.0
-            } else if tire_meta.angle <= -rotation_step {
+            } else if tire_physics.angle <= -rotation_step {
                 // Steering from left
                 rotation_step
             } else {
@@ -69,7 +70,7 @@ pub fn tire_acceleration(
 }
 
 pub fn tire_friction_impulse(
-    tire_friction_pushback_percentage: f32,
+    tire_friction_force: f32,
     tire_direction: &Vec2,
     tire_velocity: &Vec2,
 ) -> Vec2 {
@@ -79,9 +80,8 @@ pub fn tire_friction_impulse(
     } else {
         velocity_angle_unsafe
     };
-    let slide_amount = ComplexField::sin(velocity_angle).abs()
-        * tire_velocity.length()
-        * tire_friction_pushback_percentage;
+    let slide_amount =
+        ComplexField::sin(velocity_angle).abs() * tire_velocity.length() * tire_friction_force;
     let slide_direction = if velocity_angle < 0.0 {
         deg2rad(90.0)
     } else {

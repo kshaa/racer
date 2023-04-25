@@ -1,9 +1,9 @@
 use ewebsock::{Error, WsEvent, WsMessage, WsReceiver, WsSender};
 use ggrs::{Message, NonBlockingSocket};
-use zoop_shared::{PlayerId, PlayerMessage};
 use std::fmt;
 use std::fmt::Formatter;
 use std::sync::{Arc, Mutex};
+use zoop_shared::{PlayerId, PlayerMessage};
 
 /// A simple non-blocking WebSocket connection to use with GGRS Sessions
 #[derive(Debug)]
@@ -36,13 +36,11 @@ impl fmt::Debug for WrappedWsSender {
 }
 
 struct WrappedWsReceiver {
-    underlying: WsReceiver
+    underlying: WsReceiver,
 }
 impl WrappedWsReceiver {
     fn new(underlying: WsReceiver) -> WrappedWsReceiver {
-        WrappedWsReceiver {
-            underlying
-        }
+        WrappedWsReceiver { underlying }
     }
 }
 impl fmt::Debug for WrappedWsReceiver {
@@ -59,10 +57,8 @@ impl NonBlockingWebSocket {
             Err(e) => return Err(e),
         };
 
-        let wrapped_sender =
-            Arc::new(Mutex::new(WrappedWsSender::new(sender)));
-        let wrapped_receiver =
-            Arc::new(Mutex::new(WrappedWsReceiver::new(receiver)));
+        let wrapped_sender = Arc::new(Mutex::new(WrappedWsSender::new(sender)));
+        let wrapped_receiver = Arc::new(Mutex::new(WrappedWsReceiver::new(receiver)));
 
         Ok(Self {
             address,
@@ -109,7 +105,7 @@ impl NonBlockingSocket<PlayerId> for NonBlockingWebSocket {
                         if sender.opened {
                             sender.underlying.send(WsMessage::Pong(p))
                         }
-                     },
+                    }
                     WsEvent::Message(WsMessage::Text(text)) => {
                         let from_player_message: PlayerMessage =
                             serde_json::from_str(text.as_str()).unwrap();
@@ -120,9 +116,7 @@ impl NonBlockingSocket<PlayerId> for NonBlockingWebSocket {
                     }
                     WsEvent::Error(e) => panic!("Websocket error for {}: {:?}", &self.address, e),
                     WsEvent::Closed => panic!("Websocket closed for {:?}", &self.address),
-                    WsEvent::Opened => {
-                        sender.opened = true
-                    }, // Ignore
+                    WsEvent::Opened => sender.opened = true, // Ignore
                 }
             }
         }

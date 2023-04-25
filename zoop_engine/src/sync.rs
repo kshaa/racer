@@ -1,5 +1,5 @@
 use crate::controls::Controls;
-use bevy::prelude::Component;
+use bevy::prelude::*;
 use ggrs::Config;
 use zoop_shared::PlayerId;
 
@@ -12,7 +12,7 @@ impl Config for GGRSConfig {
     type Address = PlayerId;
 }
 
-#[derive(Default, Debug, Component, Clone)]
+#[derive(Clone, Debug, Default, Component, Reflect, FromReflect)]
 pub struct Player {
     pub handle: usize,
 }

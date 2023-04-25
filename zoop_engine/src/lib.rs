@@ -4,13 +4,11 @@ mod car;
 mod colors;
 mod config;
 mod controls;
+mod game;
+mod interop;
 mod math;
 mod movement;
-mod tire;
-mod game;
 mod sync;
+mod tire;
 mod websocket;
-mod interop;
 pub use interop::*;
-
-

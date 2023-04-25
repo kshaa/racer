@@ -3,10 +3,10 @@
     windows_subsystem = "windows"
 )]
 
-use zoop_shared::*;
-use uuid::Uuid;
 use clap::Parser;
+use uuid::Uuid;
 use zoop_cli::*;
+use zoop_shared::*;
 
 #[tokio::main]
 async fn main() {

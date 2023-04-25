@@ -5,7 +5,6 @@ use bevy_inspector_egui::quick::WorldInspectorPlugin;
 #[cfg(feature = "debug_lines")]
 use bevy_prototype_debug_lines::*;
 use bevy_rapier2d::prelude::*;
-use bevy_rapier2d::rapier::prelude::PhysicsPipeline;
 use ggrs::{P2PSession, PlayerType, SessionBuilder};
 
 use crate::car::*;
@@ -33,6 +32,15 @@ pub fn build_game(game: &mut App, config: GameConfig) {
     game.insert_resource(config.clone())
         .insert_resource(ClearColor(ZOOP_YELLOW));
 
+    // Default Bevy plugins
+    game.add_plugins(DefaultPlugins.set(WindowPlugin {
+        window: WindowDescriptor {
+            canvas: config.canvas_selector.clone(),
+            ..default()
+        },
+        ..default()
+    }));
+
     // Physics plugin
     game.insert_resource(config.rapier_config());
     game.add_plugin(
@@ -48,18 +56,13 @@ pub fn build_game(game: &mut App, config: GameConfig) {
     #[cfg(feature = "rapier_debug_physics")]
     game.add_plugin(RapierDebugRenderPlugin::default());
 
-    // Default Bevy plugins
-    game.add_plugins(DefaultPlugins.set(WindowPlugin {
-        window: WindowDescriptor {
-            canvas: config.canvas_selector.clone(),
-            ..default()
-        },
-        ..default()
-    }));
-
     // Debug world inspector
     #[cfg(feature = "world_debug")]
     game.add_plugin(WorldInspectorPlugin);
+
+    // Init game state
+    let state = init_state(&config);
+    game.insert_resource(state);
 
     // Synchronized game logic stage
     let game_stage = SystemStage::parallel().with_system(keyboard_based_tire_acceleration);
@@ -67,10 +70,15 @@ pub fn build_game(game: &mut App, config: GameConfig) {
     // Synchronized game schedule
     let mut synchronized_schedule = Schedule::default();
     synchronized_schedule.add_stage(
-        "rapier_load",
-        SystemStage::parallel().with_system(rapier_context_load),
+        "destroy_scene",
+        SystemStage::parallel().with_system(destroy_scene),
     );
-    synchronized_schedule.add_stage_after("rapier_load", "game_logic", game_stage);
+    synchronized_schedule.add_stage_after(
+        "destroy_scene",
+        "setup_scene",
+        SystemStage::parallel().with_system(setup_scene),
+    );
+    synchronized_schedule.add_stage_after("setup_scene", "game_logic", game_stage);
     synchronized_schedule.add_stage_after(
         "game_logic",
         "rapier_sync_backend",
@@ -101,8 +109,8 @@ pub fn build_game(game: &mut App, config: GameConfig) {
     );
     synchronized_schedule.add_stage_after(
         "rapier_detect_despawn",
-        "rapier_store",
-        SystemStage::parallel().with_system(rapier_context_store),
+        "store_scene",
+        SystemStage::parallel().with_system(store_scene),
     );
 
     // Configure networking
@@ -127,38 +135,36 @@ fn build_network(
         .with_input_system(synchronized_input)
         // register types of components AND resources you want to be rolled back
         // # physics
-        .register_rollback_component::<RigidBody>()
-        .register_rollback_component::<Velocity>()
-        .register_rollback_component::<AdditionalMassProperties>()
-        .register_rollback_component::<ReadMassProperties>()
-        // .register_rollback_component::<MassProperties>()
-        .register_rollback_component::<LockedAxes>()
-        .register_rollback_component::<ExternalForce>()
-        .register_rollback_component::<ExternalImpulse>()
-        .register_rollback_component::<Sleeping>()
-        .register_rollback_component::<Damping>()
-        .register_rollback_component::<Dominance>()
-        .register_rollback_component::<Ccd>()
-        .register_rollback_component::<GravityScale>()
-        .register_rollback_component::<CollidingEntities>()
-        .register_rollback_component::<Sensor>()
-        .register_rollback_component::<Friction>()
-        .register_rollback_component::<Restitution>()
-        .register_rollback_component::<CollisionGroups>()
-        .register_rollback_component::<SolverGroups>()
-        .register_rollback_component::<ContactForceEventThreshold>()
-        .register_rollback_component::<Group>()
-        .register_rollback_resource::<SerializedRapierContext>()
+        // .register_rollback_component::<Velocity>()
+        // .register_rollback_component::<AdditionalMassProperties>()
+        // .register_rollback_component::<ReadMassProperties>()
+        // // .register_rollback_component::<MassProperties>()
+        // .register_rollback_component::<LockedAxes>()
+        // .register_rollback_component::<ExternalForce>()
+        // .register_rollback_component::<ExternalImpulse>()
+        // .register_rollback_component::<Sleeping>()
+        // .register_rollback_component::<Damping>()
+        // .register_rollback_component::<Dominance>()
+        // .register_rollback_component::<Ccd>()
+        // .register_rollback_component::<GravityScale>()
+        // .register_rollback_component::<CollidingEntities>()
+        // .register_rollback_component::<Sensor>()
+        // .register_rollback_component::<Friction>()
+        // .register_rollback_component::<Restitution>()
+        // .register_rollback_component::<CollisionGroups>()
+        // .register_rollback_component::<SolverGroups>()
+        // .register_rollback_component::<ContactForceEventThreshold>()
+        // .register_rollback_component::<Group>()
+        .register_rollback_resource::<GameState>()
         // # bevy
-        .register_rollback_component::<Transform>()
+        // .register_rollback_component::<Transform>()
         // # game
-        .register_rollback_component::<TireMeta>()
+        // .register_rollback_component::<TireMeta>()
         // these systems will be executed as part of the advance frame update
         .with_rollback_schedule(synchronized_schedule)
         .build(game);
 
-    game.insert_resource(SerializedRapierContext::default())
-        .insert_resource(Session::P2PSession(session));
+    game.insert_resource(Session::P2PSession(session));
 }
 
 fn start_network_session(config: &GameConfig) -> P2PSession<GGRSConfig> {
@@ -197,74 +203,250 @@ fn setup_graphics(mut commands: Commands) {
     commands.spawn(bundle);
 }
 
-fn setup_scene(config: Res<GameConfig>, mut commands: Commands) {
-    /* Create the ground. */
-    commands
-        .spawn(Collider::cuboid(500.0, 50.0))
-        .insert(TransformBundle::from(Transform::from_xyz(0.0, -100.0, 0.0)));
-
-    /* Create the bouncing ball. */
-    commands
-        .spawn(RigidBody::Dynamic)
-        .insert(Collider::ball(50.0))
-        .insert(Restitution::coefficient(0.7))
-        .insert(TransformBundle::from(Transform::from_xyz(0.0, 400.0, 0.0)));
-
-    /* Create cars */
-    for (handle, _) in config.players.iter().enumerate() {
-        Car::spawn(
-            &mut commands,
-            config.car_half_size(),
-            Vec2 {
-                x: config.car_half_size().x * 4.0 * (handle as f32),
+fn init_state(config: &GameConfig) -> GameState {
+    let cars = config
+        .players
+        .iter()
+        .enumerate()
+        .map(|(handle, _)| {
+            let player = Player { handle };
+            let position = Vec3 {
+                x: config.car_half_size().x * 6.0 * (handle as f32),
                 y: 0.0,
+                z: 0.0,
+            };
+            let tire_half_size = config.tire_half_size();
+            let car_half_size = config.car_half_size();
+
+            GameEntity::Car(GameCar::fixed_for_player(
+                player,
+                position,
+                car_half_size,
+                tire_half_size,
+            ))
+        })
+        .collect();
+
+    GameState { entities: cars }
+}
+
+fn destroy_scene(
+    config: Res<GameConfig>,
+    player_entities: Query<(Entity, With<Player>)>,
+    mut rapier_config: ResMut<RapierConfiguration>,
+    mut rapier_render_time: ResMut<SimulationToRenderTime>,
+    mut rapier_context: ResMut<RapierContext>,
+    mut rapier_collision_events: ResMut<Events<CollisionEvent>>,
+    mut rapier_force_events: ResMut<Events<ContactForceEvent>>,
+    mut rapier_hooks: ResMut<PhysicsHooksWithQueryResource<NoUserData>>,
+    mut commands: Commands,
+) {
+    for (entity, _) in player_entities.iter() {
+        commands.entity(entity).despawn();
+    }
+    *rapier_config = config.rapier_config();
+    *rapier_render_time = SimulationToRenderTime::default();
+    *rapier_collision_events = Events::<CollisionEvent>::default();
+    *rapier_force_events = Events::<ContactForceEvent>::default();
+    *rapier_context = RapierContext::default();
+    *rapier_hooks = PhysicsHooksWithQueryResource::<NoUserData>(Box::new(()));
+}
+
+fn setup_scene(config: Res<GameConfig>, state: Res<GameState>, mut commands: Commands) {
+    spawn_scene(config.as_ref(), &state, &mut commands);
+}
+
+fn spawn_scene(config: &GameConfig, state: &GameState, commands: &mut Commands) {
+    for entity in state.entities.iter() {
+        match entity {
+            GameEntity::Stub() => (),
+            GameEntity::Car(car) => setup_car(config, car.clone(), commands),
+        }
+    }
+}
+
+fn store_car(
+    car_query: &mut Query<
+        (
+            &Transform,
+            &Velocity,
+            &ExternalForce,
+            &ExternalImpulse,
+            &ReadMassProperties,
+            &Player,
+        ),
+        Without<TireMeta>,
+    >,
+    fallback: GamePhysicsProps,
+    player_handle: usize,
+) -> GamePhysicsProps {
+    // Sort query for more determinism
+    let mut query = car_query.iter_mut().collect::<Vec<_>>();
+    query.sort_by_key(|(_, _, _, _, _, player)| player.handle);
+
+    // Store tire from ECS query into game state
+    query
+        .into_iter()
+        .find(|(_, _, _, _, _, player)| player.handle == player_handle)
+        .map(|(transform, velocity, force, impulse, mass, _)| {
+            GamePhysicsProps::of(
+                transform.clone(),
+                velocity.clone(),
+                force.clone(),
+                impulse.clone(),
+                mass.clone(),
+            )
+        })
+        .unwrap_or_else(|| fallback)
+}
+
+fn store_tire(
+    tire_query: &mut Query<
+        (
+            &Transform,
+            &Velocity,
+            &ExternalForce,
+            &ExternalImpulse,
+            &ReadMassProperties,
+            &TirePhysics,
+            &TireMeta,
+            &Player,
+        ),
+        Without<CarMeta>,
+    >,
+    is_front: bool,
+    is_right: bool,
+    fallback: GameTire,
+    player_handle: usize,
+) -> GameTire {
+    // Sort query for more determinism
+    let mut query = tire_query.iter_mut().collect::<Vec<_>>();
+    query.sort_by_key(|(_, _, _, _, _, _, meta, player)| {
+        (
+            player.handle,
+            if meta.is_front { 1 } else { 0 },
+            if meta.is_right { 1 } else { 0 },
+        )
+    });
+
+    // Store tire from ECS query into game state
+    query
+        .into_iter()
+        .find(|(_, _, _, _, _, _, meta, player)| {
+            player.handle == player_handle && meta.is_front == is_front && meta.is_right == is_right
+        })
+        .map(
+            |(transform, velocity, force, impulse, mass, physics, _, _)| {
+                GameTire::of(
+                    transform.clone(),
+                    velocity.clone(),
+                    force.clone(),
+                    impulse.clone(),
+                    mass.clone(),
+                    physics.angle,
+                )
             },
-            config.tire_half_size(),
-            ZOOP_RED,
-            ZOOP_BLACK,
-            config.tire_damping(),
-            Player { handle },
-        );
-    }
+        )
+        .unwrap_or_else(|| fallback)
 }
 
-fn rapier_context_load(
-    serialized: Res<SerializedRapierContext>,
-    mut unserialized: ResMut<RapierContext>,
+fn store_scene(
+    mut car_query: Query<
+        (
+            &Transform,
+            &Velocity,
+            &ExternalForce,
+            &ExternalImpulse,
+            &ReadMassProperties,
+            &Player,
+        ),
+        Without<TireMeta>,
+    >,
+    mut tire_query: Query<
+        (
+            &Transform,
+            &Velocity,
+            &ExternalForce,
+            &ExternalImpulse,
+            &ReadMassProperties,
+            &TirePhysics,
+            &TireMeta,
+            &Player,
+        ),
+        Without<CarMeta>,
+    >,
+    mut state: ResMut<GameState>,
 ) {
-    if serialized.as_ref().initialized {
-        let context: RapierContext = bincode::deserialize(&serialized.as_ref().context).unwrap();
-        unserialized.islands = context.islands;
-        unserialized.broad_phase = context.broad_phase;
-        unserialized.narrow_phase = context.narrow_phase;
-        unserialized.bodies = context.bodies;
-        unserialized.colliders = context.colliders;
-        unserialized.impulse_joints = context.impulse_joints;
-        unserialized.multibody_joints = context.multibody_joints;
-        unserialized.ccd_solver = context.ccd_solver;
-        unserialized.pipeline = PhysicsPipeline::new();
-        unserialized.query_pipeline = context.query_pipeline;
-        unserialized.integration_parameters = context.integration_parameters;
-    }
+    let new_entities = state
+        .entities
+        .iter_mut()
+        .map(|e| match e {
+            GameEntity::Stub() => GameEntity::Stub(),
+            GameEntity::Car(c) => {
+                // Take existing car
+                let mut new_car = c.clone();
+
+                // Copy car
+                new_car.physics = store_car(&mut car_query, new_car.physics, c.player.handle);
+                new_car.tire_top_right = store_tire(
+                    &mut tire_query,
+                    true,
+                    true,
+                    new_car.tire_top_right.clone(),
+                    c.player.handle,
+                );
+                new_car.tire_top_left = store_tire(
+                    &mut tire_query,
+                    true,
+                    false,
+                    new_car.tire_top_left.clone(),
+                    c.player.handle,
+                );
+                new_car.tire_bottom_right = store_tire(
+                    &mut tire_query,
+                    false,
+                    true,
+                    new_car.tire_bottom_right.clone(),
+                    c.player.handle,
+                );
+                new_car.tire_bottom_left = store_tire(
+                    &mut tire_query,
+                    false,
+                    false,
+                    new_car.tire_bottom_left.clone(),
+                    c.player.handle,
+                );
+
+                // Store new car
+                GameEntity::Car(new_car)
+            }
+        })
+        .collect();
+    state.entities = new_entities;
 }
 
-fn rapier_context_store(
-    mut serialized: ResMut<SerializedRapierContext>,
-    unserialized: Res<RapierContext>,
-) {
-    *serialized = SerializedRapierContext {
-        context: bincode::serialize(&unserialized.as_ref()).unwrap(),
-        initialized: true,
-    };
+fn setup_car(config: &GameConfig, car: GameCar, commands: &mut Commands) {
+    Car::spawn(
+        commands,
+        car.player.clone(),
+        String::from(format!("Car #{}", car.player.handle)),
+        config.car_half_size(),
+        config.tire_half_size(),
+        ZOOP_RED,
+        ZOOP_BLACK,
+        config.tire_damping(),
+        car,
+    );
 }
 
 fn keyboard_based_tire_acceleration(
     config: Res<GameConfig>,
     inputs: Res<PlayerInputs<GGRSConfig>>,
-    car_query: Query<(&CarMeta, &Transform, &Player), Without<TireMeta>>,
-    mut tire_query: Query<
+    mut source_car_query: Query<(&CarMeta, &Transform, &Player), Without<TireMeta>>,
+    mut source_tire_query: Query<
         (
-            &mut TireMeta,
+            &mut TirePhysics,
+            &TireMeta,
             &mut Transform,
             &Velocity,
             &mut ExternalForce,
@@ -275,6 +457,19 @@ fn keyboard_based_tire_acceleration(
     >,
     #[cfg(feature = "debug_lines")] mut lines: ResMut<DebugLines>,
 ) {
+    // Sort queries for more determinism
+    let mut car_query = source_car_query.iter_mut().collect::<Vec<_>>();
+    car_query.sort_by_key(|(_, _, player)| player.handle);
+
+    let mut tire_query = source_tire_query.iter_mut().collect::<Vec<_>>();
+    tire_query.sort_by_key(|(_, meta, _, _, _, _, player)| {
+        (
+            player.handle,
+            if meta.is_front { 1 } else { 0 },
+            if meta.is_right { 1 } else { 0 },
+        )
+    });
+
     #[cfg(feature = "debug_lines")]
     {
         for (_, car_transform, _) in &car_query {
@@ -293,25 +488,25 @@ fn keyboard_based_tire_acceleration(
         }
     }
 
-    for (mut tire_meta, mut transform, velocity, mut forcable, mut impulsable, tire_player) in
-        &mut tire_query
+    for (
+        mut tire_physics,
+        tire_meta,
+        mut transform,
+        velocity,
+        mut forcable,
+        mut impulsable,
+        tire_player,
+    ) in tire_query
     {
-        // Parse controls from keyboard
-        // let controls = if tire_meta.tire_set_index == 0 {
-        //     Controls::from_wasd(&input)
-        // } else if tire_meta.tire_set_index == 1 {
-        //     Controls::from_ijkl(&input)
-        // } else {
-        //     Controls::none()
-        // };
         let controls = Controls {
             input: inputs[tire_player.handle].0.input,
         };
 
         // Apply controls to tire angle
-        tire_meta.angle = tire_meta.angle
+        tire_physics.angle = tire_physics.angle
             + tire_angle_change(
-                tire_meta.as_ref(),
+                tire_meta,
+                tire_physics.as_ref(),
                 &controls,
                 config.tire_max_angle,
                 config.tire_rotation_per_tick,
@@ -323,7 +518,7 @@ fn keyboard_based_tire_acceleration(
             .find(|(_, _, car_player)| car_player.handle == tire_player.handle)
             .unwrap();
         let (_, _, car_rotation) = car_transform.rotation.to_euler(EulerRot::XYZ);
-        let tire_rotation = car_rotation + tire_meta.angle;
+        let tire_rotation = car_rotation + tire_physics.angle;
         let tire_direction = Vec2::from_angle(tire_rotation + deg2rad(90.0)).normalize_or_zero();
         let direction_velocity = velocity.linvel.dot(tire_direction);
         #[cfg(feature = "debug_lines")]
@@ -355,7 +550,7 @@ fn keyboard_based_tire_acceleration(
 
         // Apply friction
         let friction_impulse = tire_friction_impulse(
-            config.tire_friction_pushback_percentage,
+            config.tire_friction_force,
             &tire_direction,
             &velocity.linvel,
         );

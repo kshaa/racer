@@ -1,8 +1,8 @@
 use crate::error::*;
 use crate::player::*;
 use actix::*;
-use zoop_shared::{PlayerId, PlayerMessage, RoomId};
 use std::collections::HashMap;
+use zoop_shared::{PlayerId, PlayerMessage, RoomId};
 
 /// Game room comms
 #[derive(Message)]
