@@ -1,3 +1,5 @@
+pub mod desync;
+pub mod frames;
 pub mod rapier_rollback_state;
 pub mod car_body;
 pub mod tire;

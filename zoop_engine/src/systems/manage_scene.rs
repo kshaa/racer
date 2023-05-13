@@ -73,167 +73,167 @@ pub fn spawn_scene(config: &GameConfig, state: &GameState, commands: &mut Comman
         }
     }
 }
-
-pub fn store_car(
-    car_query: &mut Query<
-        (
-            &Transform,
-            &Velocity,
-            &ExternalForce,
-            &ExternalImpulse,
-            &ReadMassProperties,
-            &Player,
-        ),
-        Without<TireMeta>,
-    >,
-    fallback: EntityPhysics,
-    player_handle: usize,
-) -> EntityPhysics {
-    // Sort query for more determinism
-    let mut query = car_query.iter_mut().collect::<Vec<_>>();
-    query.sort_by_key(|(_, _, _, _, _, player)| player.handle);
-
-    // Store tire from ECS query into game state
-    query
-        .into_iter()
-        .find(|(_, _, _, _, _, player)| player.handle == player_handle)
-        .map(|(transform, velocity, force, impulse, mass, _)| {
-            EntityPhysics::of(
-                transform.clone(),
-                velocity.clone(),
-                force.clone(),
-                impulse.clone(),
-                mass.clone(),
-            )
-        })
-        .unwrap_or_else(|| fallback)
-}
-
-pub fn store_tire(
-    tire_query: &mut Query<
-        (
-            &Transform,
-            &Velocity,
-            &ExternalForce,
-            &ExternalImpulse,
-            &ReadMassProperties,
-            &TirePhysics,
-            &TireMeta,
-            &Player,
-        ),
-        Without<CarMeta>,
-    >,
-    is_front: bool,
-    is_right: bool,
-    fallback: GameTire,
-    player_handle: usize,
-) -> GameTire {
-    // Sort query for more determinism
-    let mut query = tire_query.iter_mut().collect::<Vec<_>>();
-    query.sort_by_key(|(_, _, _, _, _, _, meta, player)| {
-        (
-            player.handle,
-            if meta.is_front { 1 } else { 0 },
-            if meta.is_right { 1 } else { 0 },
-        )
-    });
-
-    // Store tire from ECS query into game state
-    query
-        .into_iter()
-        .find(|(_, _, _, _, _, _, meta, player)| {
-            player.handle == player_handle && meta.is_front == is_front && meta.is_right == is_right
-        })
-        .map(
-            |(transform, velocity, force, impulse, mass, physics, _, _)| {
-                GameTire::of(
-                    transform.clone(),
-                    velocity.clone(),
-                    force.clone(),
-                    impulse.clone(),
-                    mass.clone(),
-                    physics.angle,
-                )
-            },
-        )
-        .unwrap_or_else(|| fallback)
-}
-
-pub fn store_scene(
-    mut car_query: Query<
-        (
-            &Transform,
-            &Velocity,
-            &ExternalForce,
-            &ExternalImpulse,
-            &ReadMassProperties,
-            &Player,
-        ),
-        Without<TireMeta>,
-    >,
-    mut tire_query: Query<
-        (
-            &Transform,
-            &Velocity,
-            &ExternalForce,
-            &ExternalImpulse,
-            &ReadMassProperties,
-            &TirePhysics,
-            &TireMeta,
-            &Player,
-        ),
-        Without<CarMeta>,
-    >,
-    mut state: ResMut<GameState>,
-) {
-    // println!("Storing state from scene");
-    let new_entities = state
-        .entities
-        .iter_mut()
-        .map(|e| match e {
-            GameEntity::Stub() => GameEntity::Stub(),
-            GameEntity::Car(c) => {
-                // Take existing car
-                let mut new_car = c.clone();
-
-                // Copy car
-                new_car.physics = store_car(&mut car_query, new_car.physics, c.player.handle);
-                new_car.tire_top_right = store_tire(
-                    &mut tire_query,
-                    true,
-                    true,
-                    new_car.tire_top_right.clone(),
-                    c.player.handle,
-                );
-                new_car.tire_top_left = store_tire(
-                    &mut tire_query,
-                    true,
-                    false,
-                    new_car.tire_top_left.clone(),
-                    c.player.handle,
-                );
-                new_car.tire_bottom_right = store_tire(
-                    &mut tire_query,
-                    false,
-                    true,
-                    new_car.tire_bottom_right.clone(),
-                    c.player.handle,
-                );
-                new_car.tire_bottom_left = store_tire(
-                    &mut tire_query,
-                    false,
-                    false,
-                    new_car.tire_bottom_left.clone(),
-                    c.player.handle,
-                );
-
-                // Store new car
-                GameEntity::Car(new_car)
-            }
-        })
-        .collect();
-    state.entities = new_entities;
-}
+//
+// pub fn store_car(
+//     car_query: &mut Query<
+//         (
+//             &Transform,
+//             &Velocity,
+//             &ExternalForce,
+//             &ExternalImpulse,
+//             &ReadMassProperties,
+//             &Player,
+//         ),
+//         Without<TireMeta>,
+//     >,
+//     fallback: EntityPhysics,
+//     player_handle: usize,
+// ) -> EntityPhysics {
+//     // Sort query for more determinism
+//     let mut query = car_query.iter_mut().collect::<Vec<_>>();
+//     query.sort_by_key(|(_, _, _, _, _, player)| player.handle);
+//
+//     // Store tire from ECS query into game state
+//     query
+//         .into_iter()
+//         .find(|(_, _, _, _, _, player)| player.handle == player_handle)
+//         .map(|(transform, velocity, force, impulse, mass, _)| {
+//             EntityPhysics::of(
+//                 transform.clone(),
+//                 velocity.clone(),
+//                 force.clone(),
+//                 impulse.clone(),
+//                 mass.clone(),
+//             )
+//         })
+//         .unwrap_or_else(|| fallback)
+// }
+//
+// pub fn store_tire(
+//     tire_query: &mut Query<
+//         (
+//             &Transform,
+//             &Velocity,
+//             &ExternalForce,
+//             &ExternalImpulse,
+//             &ReadMassProperties,
+//             &TirePhysics,
+//             &TireMeta,
+//             &Player,
+//         ),
+//         Without<CarMeta>,
+//     >,
+//     is_front: bool,
+//     is_right: bool,
+//     fallback: GameTire,
+//     player_handle: usize,
+// ) -> GameTire {
+//     // Sort query for more determinism
+//     let mut query = tire_query.iter_mut().collect::<Vec<_>>();
+//     query.sort_by_key(|(_, _, _, _, _, _, meta, player)| {
+//         (
+//             player.handle,
+//             if meta.is_front { 1 } else { 0 },
+//             if meta.is_right { 1 } else { 0 },
+//         )
+//     });
+//
+//     // Store tire from ECS query into game state
+//     query
+//         .into_iter()
+//         .find(|(_, _, _, _, _, _, meta, player)| {
+//             player.handle == player_handle && meta.is_front == is_front && meta.is_right == is_right
+//         })
+//         .map(
+//             |(transform, velocity, force, impulse, mass, physics, _, _)| {
+//                 GameTire::of(
+//                     transform.clone(),
+//                     velocity.clone(),
+//                     force.clone(),
+//                     impulse.clone(),
+//                     mass.clone(),
+//                     physics.angle,
+//                 )
+//             },
+//         )
+//         .unwrap_or_else(|| fallback)
+// }
+//
+// pub fn store_scene(
+//     mut car_query: Query<
+//         (
+//             &Transform,
+//             &Velocity,
+//             &ExternalForce,
+//             &ExternalImpulse,
+//             &ReadMassProperties,
+//             &Player,
+//         ),
+//         Without<TireMeta>,
+//     >,
+//     mut tire_query: Query<
+//         (
+//             &Transform,
+//             &Velocity,
+//             &ExternalForce,
+//             &ExternalImpulse,
+//             &ReadMassProperties,
+//             &TirePhysics,
+//             &TireMeta,
+//             &Player,
+//         ),
+//         Without<CarMeta>,
+//     >,
+//     mut state: ResMut<GameState>,
+// ) {
+//     // println!("Storing state from scene");
+//     let new_entities = state
+//         .entities
+//         .iter_mut()
+//         .map(|e| match e {
+//             GameEntity::Stub() => GameEntity::Stub(),
+//             GameEntity::Car(c) => {
+//                 // Take existing car
+//                 let mut new_car = c.clone();
+//
+//                 // Copy car
+//                 new_car.physics = store_car(&mut car_query, new_car.physics, c.player.handle);
+//                 new_car.tire_top_right = store_tire(
+//                     &mut tire_query,
+//                     true,
+//                     true,
+//                     new_car.tire_top_right.clone(),
+//                     c.player.handle,
+//                 );
+//                 new_car.tire_top_left = store_tire(
+//                     &mut tire_query,
+//                     true,
+//                     false,
+//                     new_car.tire_top_left.clone(),
+//                     c.player.handle,
+//                 );
+//                 new_car.tire_bottom_right = store_tire(
+//                     &mut tire_query,
+//                     false,
+//                     true,
+//                     new_car.tire_bottom_right.clone(),
+//                     c.player.handle,
+//                 );
+//                 new_car.tire_bottom_left = store_tire(
+//                     &mut tire_query,
+//                     false,
+//                     false,
+//                     new_car.tire_bottom_left.clone(),
+//                     c.player.handle,
+//                 );
+//
+//                 // Store new car
+//                 GameEntity::Car(new_car)
+//             }
+//         })
+//         .collect();
+//     state.entities = new_entities;
+// }
 
 pub fn setup_car(config: &GameConfig, car: GameCar, commands: &mut Commands) {
     spawn_car(

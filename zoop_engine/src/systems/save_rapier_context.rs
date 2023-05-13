@@ -1,6 +1,8 @@
 use bevy::prelude::*;
 use bevy_rapier2d::plugin::RapierContext;
 use crate::domain::checksum::fletcher16;
+use crate::domain::desync::FrameHashes;
+use crate::domain::frames::*;
 use crate::domain::game_config::GameConfig;
 use crate::domain::rapier_rollback_state::RapierRollbackState;
 
@@ -25,7 +27,7 @@ pub fn save_rapier_context(
 
         if let Some(frame_hash) = hashes
             .0
-            .get_mut((current_frame.0 as usize) % config.desync_max_frames)
+            .get_mut((current_frame.0 as usize) % (config.desync_max_frames as usize))
         {
             if frame_hash.frame == current_frame.0 && frame_hash.sent {
                 // If this frame hash has already been sent and its the

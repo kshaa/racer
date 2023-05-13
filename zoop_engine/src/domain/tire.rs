@@ -32,6 +32,13 @@ pub struct Tire {
     external_force: ExternalForce,
     external_impulse: ExternalImpulse,
     collider: Collider,
+    collider_scale: ColliderScale,
+    locked_axes: LockedAxes,
+    restitution: Restitution,
+    friction: Friction,
+    active_events: ActiveEvents,
+    ccd: Ccd,
+    collision_groups: CollisionGroups,
     sprite_bundle: SpriteBundle,
     player: Player,
 }
@@ -73,6 +80,13 @@ impl Tire {
             external_force: physics.entity_physics.force,
             external_impulse: physics.entity_physics.impulse,
             collider: Collider::cuboid(half_size.x, half_size.y),
+            collider_scale: ColliderScale::Absolute(Vec2::new(1., 1.)),
+            locked_axes: LockedAxes::default(),
+            restitution: Restitution::default(),
+            friction: Friction::default(),
+            active_events: ActiveEvents::empty(),
+            ccd: Ccd::disabled(),
+            collision_groups: CollisionGroups::default(),
             sprite_bundle: SpriteBundle {
                 transform: physics.entity_physics.transform,
                 sprite: Sprite {

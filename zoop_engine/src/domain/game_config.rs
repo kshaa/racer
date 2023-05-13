@@ -33,6 +33,8 @@ pub struct GameConfig {
     pub desync_max_frames: u16,
 }
 
+pub const DESYNC_MAX_FRAMES: u16 = 30;
+
 impl GameConfig {
     fn _meters2pix(pixels_per_meter: f32, meters: f32) -> f32 {
         pixels_per_meter * meters
@@ -57,13 +59,13 @@ impl GameConfig {
             tire_radius: m2p(0.4),
             tire_rotation_per_tick: deg2rad(15.0),
             tire_max_angle: deg2rad(35.0),
-            tire_acceleration_force: m2p(14000.0),
-            tire_reversing_force: m2p(10000.0),
-            tire_breaking_force: m2p(30000.0),
-            tire_friction_force: 50.0,
-            tire_linear_damping: 0.5,
+            tire_acceleration_force: m2p(140.0),
+            tire_reversing_force: m2p(100.0),
+            tire_breaking_force: m2p(300.0),
+            tire_friction_force: 0.5,
+            tire_linear_damping: 5.0,
             tire_angular_damping: 0.1,
-            desync_max_frames: 30,
+            desync_max_frames: DESYNC_MAX_FRAMES,
         }
     }
 
