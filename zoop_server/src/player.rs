@@ -4,7 +4,9 @@ use crate::room::*;
 use actix::fut::Ready;
 use actix::*;
 use actix_web_actors::ws;
-use zoop_shared::{PlayerId, PlayerMessage, RoomId};
+use zoop_shared::player_id::PlayerId;
+use zoop_shared::player_message::PlayerMessage;
+use zoop_shared::room_id::RoomId;
 
 /// Define game player
 pub struct GamePlayer {

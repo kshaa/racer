@@ -1,8 +1,8 @@
-use crate::controls::*;
-use crate::math::*;
-use crate::tire::*;
+use crate::logic::math::*;
 use bevy::math::*;
 use nalgebra::ComplexField;
+use crate::domain::controls::Controls;
+use crate::domain::tire::*;
 
 pub fn tire_angle_change(
     tire_meta: &TireMeta,

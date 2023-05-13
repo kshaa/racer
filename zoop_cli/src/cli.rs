@@ -2,7 +2,8 @@ use clap::{Parser, Subcommand};
 use std::process::Command;
 use uuid::Uuid;
 use zoop_engine::networked_game;
-use zoop_shared::{PlayerId, RoomId};
+use zoop_shared::player_id::PlayerId;
+use zoop_shared::room_id::RoomId;
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -44,6 +45,7 @@ pub async fn run_command(command: CLICommand) {
     };
 }
 
+#[allow(dead_code)]
 pub fn exec_join_game(
     is_main_player: bool,
     player_id_0: PlayerId,

@@ -3,7 +3,8 @@ use ggrs::{Message, NonBlockingSocket};
 use std::fmt;
 use std::fmt::Formatter;
 use std::sync::{Arc, Mutex};
-use zoop_shared::{PlayerId, PlayerMessage};
+use zoop_shared::player_id::PlayerId;
+use zoop_shared::player_message::PlayerMessage;
 
 /// A simple non-blocking WebSocket connection to use with GGRS Sessions
 #[derive(Debug)]

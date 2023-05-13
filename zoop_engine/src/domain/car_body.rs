@@ -1,9 +1,8 @@
-use crate::config::{GameCar, GamePhysicsProps};
-use crate::sync::Player;
-use crate::tire::*;
+use crate::domain::game_state::*;
 use bevy::core::Name;
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
+use crate::domain::player::Player;
 
 #[derive(Component)]
 pub struct CarMeta {
@@ -11,7 +10,7 @@ pub struct CarMeta {
 }
 
 #[derive(Bundle)]
-pub struct Car {
+pub struct CarBody {
     meta: CarMeta,
     name: Name,
     rigid_body: RigidBody,
@@ -26,20 +25,15 @@ pub struct Car {
     player: Player,
 }
 
-pub struct CarEntities {
-    pub body: Entity,
-    pub tires: TireEntities,
-}
-
-impl Car {
-    fn build_without_tires(
+impl CarBody {
+    pub fn build(
         car_title: String,
         half_size: Vec2,
         player: Player,
         color: Color,
-        physics: GamePhysicsProps,
-    ) -> Car {
-        Car {
+        physics: EntityPhysics,
+    ) -> CarBody {
+        CarBody {
             meta: CarMeta { half_size },
             rigid_body: RigidBody::Dynamic,
             name: Name::new(car_title),
@@ -60,43 +54,6 @@ impl Car {
                 ..default()
             },
             player,
-        }
-    }
-
-    pub fn spawn(
-        commands: &mut Commands,
-        player: Player,
-        car_title: String,
-        car_half_size: Vec2,
-        tire_half_size: Vec2,
-        car_color: Color,
-        tire_color: Color,
-        tire_damping: Damping,
-        car_physics: GameCar,
-    ) -> CarEntities {
-        let car = commands.spawn(Car::build_without_tires(
-            car_title.clone(),
-            car_half_size,
-            player.clone(),
-            car_color,
-            car_physics.physics.clone(),
-        ));
-        let car_id = car.id();
-        let tires = Tire::spawn_all_for_car(
-            commands,
-            player.clone(),
-            car_id.clone(),
-            car_half_size,
-            tire_half_size,
-            tire_color,
-            tire_damping,
-            car_title,
-            car_physics,
-        );
-
-        CarEntities {
-            body: car_id.clone(),
-            tires,
         }
     }
 }

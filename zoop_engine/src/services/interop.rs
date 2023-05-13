@@ -1,10 +1,13 @@
-use crate::config::*;
-use crate::game::*;
+use crate::domain::game_config::GameConfig;
+use crate::systems::build_game::build_game;
+use crate::domain::room_config::RoomConfig;
 use bevy::prelude::*;
 use url::Url;
 use uuid::Uuid;
 use wasm_bindgen::prelude::*;
-use zoop_shared::{NetworkPlayer, PlayerId, RoomId};
+use zoop_shared::network_player::NetworkPlayer;
+use zoop_shared::player_id::PlayerId;
+use zoop_shared::room_id::RoomId;
 
 #[wasm_bindgen]
 pub fn networked_game_raw(
@@ -50,7 +53,7 @@ pub fn networked_game(
     // Define network
     let server_address = Url::parse("ws://localhost:8080/").unwrap();
     let room = room_id;
-    let network = NetworkConfig {
+    let network = RoomConfig {
         server_address,
         room,
     };

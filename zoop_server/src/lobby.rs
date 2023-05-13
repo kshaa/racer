@@ -3,7 +3,7 @@ use crate::room::*;
 use actix::*;
 use actix_web::Result;
 use std::collections::HashMap;
-use zoop_shared::RoomId;
+use zoop_shared::room_id::RoomId;
 
 /// Game room metadata
 #[derive(Debug, Clone)]

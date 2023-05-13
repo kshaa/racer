@@ -1,6 +1,5 @@
 use bevy::prelude::*;
 use bytemuck::{Pod, Zeroable};
-use ggrs::PlayerHandle;
 
 const INPUT_ACCELERATE: u64 = 1 << 0;
 const INPUT_REVERSE: u64 = 1 << 1;
@@ -73,11 +72,4 @@ impl Controls {
             KeyCode::A,
         )
     }
-}
-
-pub fn synchronized_input(
-    _handle: In<PlayerHandle>,
-    keyboard_input: Res<Input<KeyCode>>,
-) -> Controls {
-    Controls::from_wasd(keyboard_input.as_ref())
 }

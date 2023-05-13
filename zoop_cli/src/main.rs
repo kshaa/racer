@@ -1,7 +1,6 @@
 mod cli;
 use crate::cli::*;
 use clap::*;
-use uuid::Uuid;
 
 /// Zoop CLI client
 #[tokio::main]

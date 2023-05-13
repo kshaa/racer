@@ -11,6 +11,8 @@ use actix_web_actors::ws;
 use std::sync::Mutex;
 use uuid::{uuid, Uuid};
 use zoop_shared::*;
+use zoop_shared::player_id::PlayerId;
+use zoop_shared::room_id::RoomId;
 mod error;
 use crate::error::*;
 mod lobby;

@@ -4,13 +4,13 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-bevy = { version = "0.9.1", features = [] }
-bevy-inspector-egui = "0.17.0"
-bevy_rapier2d = { version = "0.20.0", features = [ "wasm-bindgen", "serde-serialize", "enhanced-determinism" ] }
+bevy = { version = "0.10.1", features = [] }
+bevy-inspector-egui = "0.18.3"
+bevy_rapier2d = { version = "0.21.0", features = [ "wasm-bindgen", "serde-serialize", "enhanced-determinism" ] }
 console_error_panic_hook = { version = "0.1", optional = true }
 nalgebra = "0.32.2"
-bevy_prototype_debug_lines = { version = "0.9", optional = true }
-bevy_ggrs = "0.11.0"
+bevy_prototype_debug_lines = { version = "0.10.1", optional = true }
+bevy_ggrs = "0.12.0"
 ggrs = "0.9.3"
 bytemuck = "1.13.1"
 zoop_shared = { path = "../zoop_shared" }
@@ -27,7 +27,7 @@ wasm-opt = false
 
 [features]
 default = []
-bevy_dynamic = ["bevy/dynamic"] # Experimental: Faster development environment
+bevy_dynamic = ["bevy/dynamic_linking"] # Experimental: Faster development environment
 rapier_debug_physics = ["bevy_rapier2d/debug-render-2d"] # Rapier debug wireframes
 world_debug = [] # Bevy ECS introspection UI
 debug_lines = ["dep:bevy_prototype_debug_lines"] # Game force vectors
@@ -36,3 +36,4 @@ console_errors = ["dep:console_error_panic_hook"] # Print panics to browser cons
 [lib]
 name = "zoop_engine"
 crate-type = ["cdylib", "rlib"]
+
