@@ -1,8 +1,8 @@
 extern crate wasm_bindgen;
 
 mod domain;
-mod systems;
-mod services;
 mod logic;
+mod services;
+mod systems;
 
 pub use services::interop::*;

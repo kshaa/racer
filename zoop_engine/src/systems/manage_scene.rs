@@ -1,6 +1,3 @@
-use bevy::prelude::*;
-use bevy_ggrs::RollbackIdProvider;
-use bevy_rapier2d::prelude::*;
 use crate::domain::car::spawn_car;
 use crate::domain::car_body::CarMeta;
 use crate::domain::colors::{ZOOP_BLACK, ZOOP_RED};
@@ -9,6 +6,9 @@ use crate::domain::game_state::{EntityPhysics, GameCar, GameEntity, GameState, G
 use crate::domain::player::Player;
 use crate::domain::spawn::DeterministicSpawn;
 use crate::domain::tire::{TireMeta, TirePhysics};
+use bevy::prelude::*;
+use bevy_ggrs::RollbackIdProvider;
+use bevy_rapier2d::prelude::*;
 
 pub fn init_scene(config: &GameConfig) -> GameState {
     println!("Initiating scene state");
@@ -64,7 +64,7 @@ pub fn setup_scene(
     state: Res<GameState>,
     mut rip: ResMut<RollbackIdProvider>,
     spawn_pool: Query<(Entity, &DeterministicSpawn)>,
-    mut commands: Commands
+    mut commands: Commands,
 ) {
     // Get our entities and sort them by the spawn component index
     let mut sorted_spawn_pool: Vec<(Entity, &DeterministicSpawn)> = spawn_pool.iter().collect();
@@ -72,7 +72,13 @@ pub fn setup_scene(
     // Get the Entities in reverse for easy popping
     let mut sorted_entity_pool: Vec<Entity> = sorted_spawn_pool.iter().map(|p| p.0).rev().collect();
 
-    spawn_scene(config.as_ref(), &state, &mut commands, &mut sorted_entity_pool, &mut rip);
+    spawn_scene(
+        config.as_ref(),
+        &state,
+        &mut commands,
+        &mut sorted_entity_pool,
+        &mut rip,
+    );
 }
 
 pub fn spawn_scene(
@@ -89,7 +95,7 @@ pub fn spawn_scene(
             GameEntity::Car(car) => {
                 println!("Spawning car for player {}", car.player.handle);
                 setup_car(config, car.clone(), commands, spawn_pool, rip)
-            },
+            }
         }
     }
     while !spawn_pool.is_empty() {

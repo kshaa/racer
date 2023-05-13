@@ -1,9 +1,9 @@
-use bevy::prelude::*;
-use ggrs::PlayerHandle;
 use crate::domain::controls::Controls;
 use crate::domain::desync::*;
 use crate::domain::frames::*;
 use crate::systems::rollback_rapier_context::PhysicsEnabled;
+use bevy::prelude::*;
+use ggrs::PlayerHandle;
 
 pub fn read_controls(
     _handle: In<PlayerHandle>,
@@ -36,15 +36,12 @@ pub fn read_controls(
     }
 
     if !physics_enabled.0 {
-        Controls::empty(
-            last_confirmed_hash,
-            last_confirmed_frame
-        )
+        Controls::empty(last_confirmed_hash, last_confirmed_frame)
     } else {
         Controls::from_wasd(
             keyboard_input.as_ref(),
             last_confirmed_hash,
-            last_confirmed_frame
+            last_confirmed_frame,
         )
     }
 }

@@ -7,8 +7,8 @@ use bevy_prototype_debug_lines::*;
 use bevy_rapier2d::prelude::*;
 
 use crate::domain::colors::*;
-use crate::domain::frames::*;
 use crate::domain::desync::*;
+use crate::domain::frames::*;
 use crate::domain::game_config::GameConfig;
 use crate::domain::game_set::GameSet;
 use crate::domain::spawn::*;
@@ -82,7 +82,11 @@ pub fn build_game(game: &mut App, config: GameConfig) {
     game.insert_resource(RxFrameHashes::default());
 
     // physics toggling
-    game.insert_resource(EnablePhysicsAfter::with_default_offset(0, config.fps as i32, config.load_seconds as i32));
+    game.insert_resource(EnablePhysicsAfter::with_default_offset(
+        0,
+        config.fps as i32,
+        config.load_seconds as i32,
+    ));
     game.insert_resource(PhysicsEnabled::default());
 
     // Reset rapier
@@ -101,70 +105,88 @@ pub fn build_game(game: &mut App, config: GameConfig) {
 
     game.get_schedule_mut(game_schedule)
         .unwrap()
-        .configure_sets((
-            GameSet::Rollback,
-            GameSet::Game,
-            PhysicsSet::SyncBackend,
-            PhysicsSet::SyncBackendFlush,
-            PhysicsSet::StepSimulation,
-            PhysicsSet::Writeback,
-            GameSet::SaveAndChecksum,
-        ).chain()
-            .after(CoreSet::UpdateFlush)
-            .before(CoreSet::PostUpdate))
-        .add_systems((
-            update_current_frame,
-            update_current_session_frame,
-            update_confirmed_frame,
-            // the three above must actually come before we update rollback status
-            update_rollback_status,
-            // these three must actually come after we update rollback status
-            update_validatable_frame,
-            toggle_physics,
-            rollback_rapier_context,
-            // Make sure to flush everything before we apply our game logic.
-            apply_system_buffers,
-        ).chain().in_base_set(GameSet::Rollback))
-        .add_systems((
-            // destroy_scene,
-            // setup_scene,
-            drive_car,
-            // The `frame_validator` relies on the execution of `apply_inputs` and must come after.
-            // It could happen anywhere else, I just stuck it here to be clear.
-            // If this is causing your game to quit, you have a bug!
-            frame_validator,
-            force_update_rollbackables,
-            // Make sure to flush everything before Rapier syncs
-            apply_system_buffers,
-        ).chain().in_base_set(GameSet::Game))
+        .configure_sets(
+            (
+                GameSet::Rollback,
+                GameSet::Game,
+                PhysicsSet::SyncBackend,
+                PhysicsSet::SyncBackendFlush,
+                PhysicsSet::StepSimulation,
+                PhysicsSet::Writeback,
+                GameSet::SaveAndChecksum,
+            )
+                .chain()
+                .after(CoreSet::UpdateFlush)
+                .before(CoreSet::PostUpdate),
+        )
+        .add_systems(
+            (
+                update_current_frame,
+                update_current_session_frame,
+                update_confirmed_frame,
+                // the three above must actually come before we update rollback status
+                update_rollback_status,
+                // these three must actually come after we update rollback status
+                update_validatable_frame,
+                toggle_physics,
+                rollback_rapier_context,
+                // Make sure to flush everything before we apply our game logic.
+                apply_system_buffers,
+            )
+                .chain()
+                .in_base_set(GameSet::Rollback),
+        )
+        .add_systems(
+            (
+                // destroy_scene,
+                // setup_scene,
+                drive_car,
+                // The `frame_validator` relies on the execution of `apply_inputs` and must come after.
+                // It could happen anywhere else, I just stuck it here to be clear.
+                // If this is causing your game to quit, you have a bug!
+                frame_validator,
+                force_update_rollbackables,
+                // Make sure to flush everything before Rapier syncs
+                apply_system_buffers,
+            )
+                .chain()
+                .in_base_set(GameSet::Game),
+        )
         .add_systems(
             RapierPhysicsPlugin::<NoUserData>::get_systems(PhysicsSet::SyncBackend)
-                .in_base_set(PhysicsSet::SyncBackend)
+                .in_base_set(PhysicsSet::SyncBackend),
         )
-        .add_systems((
-            rapier_stub
-                .after(bevy::transform::systems::sync_simple_transforms)
-                .before(bevy::transform::systems::propagate_transforms),
-            rapier_stub2
-                .after(systems::init_joints)
-                .before(systems::apply_initial_rigid_body_impulses),
-        ).in_base_set(PhysicsSet::SyncBackend))
+        .add_systems(
+            (
+                rapier_stub
+                    .after(bevy::transform::systems::sync_simple_transforms)
+                    .before(bevy::transform::systems::propagate_transforms),
+                rapier_stub2
+                    .after(systems::init_joints)
+                    .before(systems::apply_initial_rigid_body_impulses),
+            )
+                .in_base_set(PhysicsSet::SyncBackend),
+        )
         .add_systems(
             RapierPhysicsPlugin::<NoUserData>::get_systems(PhysicsSet::SyncBackendFlush)
-                .in_base_set(PhysicsSet::SyncBackendFlush)
+                .in_base_set(PhysicsSet::SyncBackendFlush),
         )
         .add_systems(
             RapierPhysicsPlugin::<NoUserData>::get_systems(PhysicsSet::StepSimulation)
-                .in_base_set(PhysicsSet::StepSimulation)
+                .in_base_set(PhysicsSet::StepSimulation),
         )
         .add_systems(
             RapierPhysicsPlugin::<NoUserData>::get_systems(PhysicsSet::Writeback)
-                .in_base_set(PhysicsSet::Writeback)
+                .in_base_set(PhysicsSet::Writeback),
         )
-        .add_systems((
-            save_rapier_context, // This must execute after writeback to store the RapierContext
-            apply_system_buffers, // Flushing again
-        ).chain().in_base_set(GameSet::SaveAndChecksum));
+        .add_systems(
+            (
+                save_rapier_context, // This must execute after writeback to store the RapierContext
+                apply_system_buffers, // Flushing again
+            )
+                .chain()
+                .in_base_set(GameSet::SaveAndChecksum),
+        );
 
     // Scene setup
     game.add_startup_system(setup_graphics);

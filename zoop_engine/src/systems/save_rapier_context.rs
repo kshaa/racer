@@ -1,10 +1,10 @@
-use bevy::prelude::*;
-use bevy_rapier2d::plugin::RapierContext;
 use crate::domain::checksum::fletcher16;
 use crate::domain::desync::FrameHashes;
 use crate::domain::frames::*;
 use crate::domain::game_config::GameConfig;
 use crate::domain::rapier_rollback_state::RapierRollbackState;
+use bevy::prelude::*;
+use bevy_rapier2d::plugin::RapierContext;
 
 pub fn save_rapier_context(
     config: Res<GameConfig>,
@@ -38,9 +38,7 @@ pub fn save_rapier_context(
                 );
                 info!(
                     "Integrity challenged of frame {}: {} vs {}",
-                    frame_hash.frame,
-                    frame_hash.rapier_checksum,
-                    game_state.rapier_checksum
+                    frame_hash.frame, frame_hash.rapier_checksum, game_state.rapier_checksum
                 );
             }
 

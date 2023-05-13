@@ -1,9 +1,9 @@
+use crate::domain::game_state::GameTire;
+use crate::domain::player::Player;
 use bevy::core::Name;
 use bevy::math::*;
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
-use crate::domain::game_state::GameTire;
-use crate::domain::player::Player;
 
 #[derive(Copy, Clone, Debug, Default, Component, Reflect, FromReflect)]
 #[reflect(Component)]

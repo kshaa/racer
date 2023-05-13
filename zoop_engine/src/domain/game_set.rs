@@ -5,5 +5,5 @@ use bevy::prelude::*;
 pub enum GameSet {
     Rollback,
     Game,
-    SaveAndChecksum
+    SaveAndChecksum,
 }

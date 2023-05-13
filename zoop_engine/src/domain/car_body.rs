@@ -1,8 +1,8 @@
 use crate::domain::game_state::*;
+use crate::domain::player::Player;
 use bevy::core::Name;
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
-use crate::domain::player::Player;
 
 #[derive(Component)]
 pub struct CarMeta {

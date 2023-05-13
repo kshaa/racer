@@ -1,8 +1,8 @@
-use bevy::prelude::*;
-use bevy_rapier2d::prelude::*;
 use crate::domain::car::tire_position;
 use crate::domain::player::Player;
 use crate::domain::tire::TirePhysics;
+use bevy::prelude::*;
+use bevy_rapier2d::prelude::*;
 
 #[derive(Clone, Debug, Default, Resource, Reflect, FromReflect)]
 #[reflect(Resource)]

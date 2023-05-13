@@ -1,7 +1,3 @@
-use bevy::prelude::*;
-use bevy_ggrs::*;
-use bevy_rapier2d::dynamics::{Sleeping, Velocity};
-use ggrs::*;
 use crate::domain::frames::CurrentFrame;
 use crate::domain::game_config::GameConfig;
 use crate::domain::game_state::GameState;
@@ -10,20 +6,18 @@ use crate::domain::rapier_rollback_state::RapierRollbackState;
 use crate::services::websocket::*;
 use crate::systems::read_controls::read_controls;
 use crate::systems::rollback_rapier_context::EnablePhysicsAfter;
+use bevy::prelude::*;
+use bevy_ggrs::*;
+use bevy_rapier2d::dynamics::{Sleeping, Velocity};
+use ggrs::*;
 
-pub fn build_network(
-    game: &mut App,
-    config: &GameConfig,
-) {
+pub fn build_network(game: &mut App, config: &GameConfig) {
     let mut session = start_network_session(&config);
     build_ggrs(game, config);
     game.insert_resource(Session::P2PSession(session));
 }
 
-pub fn build_ggrs(
-    game: &mut App,
-    config: &GameConfig
-) {
+pub fn build_ggrs(game: &mut App, config: &GameConfig) {
     GGRSPlugin::<GGRSConfig>::new()
         // define frequency of rollback game logic update
         .with_update_frequency(usize::from(config.fps))

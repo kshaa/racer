@@ -1,10 +1,10 @@
+use crate::domain::frames::*;
+use crate::domain::game_config::DESYNC_MAX_FRAMES;
+use crate::domain::ggrs_config::GGRSConfig;
 use bevy::prelude::*;
 use bevy_ggrs::{Rollback, Session};
 use bevy_rapier2d::prelude::*;
 use ggrs::*;
-use crate::domain::frames::*;
-use crate::domain::game_config::DESYNC_MAX_FRAMES;
-use crate::domain::ggrs_config::GGRSConfig;
 
 /// Metadata we need to store about frames we've rendered locally
 #[derive(Default, Hash, Resource, PartialEq, Eq, Debug)]
@@ -71,7 +71,8 @@ pub fn frame_validator(
                     remote_checksum,
                     /// remote address of the endpoint.
                     addr,
-                } = event {
+                } = event
+                {
                     let msg = format!(
                         "Desync on frame {:?}, local checksum {:?} != remote checksum {:?} for address {:?}",
                         frame,

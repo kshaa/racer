@@ -1,6 +1,6 @@
+use crate::domain::controls::Controls;
 use ggrs::Config;
 use zoop_shared::player_id::PlayerId;
-use crate::domain::controls::Controls;
 
 #[derive(Debug)]
 pub struct GGRSConfig;

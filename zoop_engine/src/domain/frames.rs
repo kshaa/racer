@@ -1,8 +1,8 @@
+use crate::domain::game_config::GameConfig;
+use crate::domain::ggrs_config::GGRSConfig;
 use bevy::prelude::*;
 use bevy_ggrs::Session;
 use ggrs::*;
-use crate::domain::game_config::GameConfig;
-use crate::domain::ggrs_config::GGRSConfig;
 
 /// Left outside of the rollback system to detect rollbacks
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default, Resource, Hash, Reflect)]
@@ -99,16 +99,14 @@ pub fn update_rollback_status(
         rollback_status.rollback_frame = current_frame.0;
         info!(
             "rollback on {} to {}",
-            rollback_status.last_frame,
-            rollback_status.rollback_frame,
+            rollback_status.last_frame, rollback_status.rollback_frame,
         );
     }
 
     if rollback_status.is_replay {
         info!(
             "replay on {} of {}",
-            current_session_frame.0,
-            current_frame.0
+            current_session_frame.0, current_frame.0
         );
     }
 
@@ -117,7 +115,6 @@ pub fn update_rollback_status(
     // off... and there may be additional rollbacks that happen during that!
     rollback_status.last_frame = current_frame.0;
 }
-
 
 pub fn update_validatable_frame(
     config: Res<GameConfig>,

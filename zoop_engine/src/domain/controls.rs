@@ -68,17 +68,15 @@ impl Controls {
         Controls {
             input: serialized,
             last_confirmed_hash,
-            last_confirmed_frame
+            last_confirmed_frame,
         }
     }
 
-    pub fn empty(
-        last_confirmed_hash: u16,
-        last_confirmed_frame: Frame) -> Controls {
+    pub fn empty(last_confirmed_hash: u16, last_confirmed_frame: Frame) -> Controls {
         Controls {
             input: 0,
             last_confirmed_hash,
-            last_confirmed_frame
+            last_confirmed_frame,
         }
     }
 
@@ -95,7 +93,7 @@ impl Controls {
             KeyCode::D,
             KeyCode::A,
             last_confirmed_hash,
-            last_confirmed_frame
+            last_confirmed_frame,
         )
     }
 }

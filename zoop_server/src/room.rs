@@ -1,8 +1,8 @@
 use crate::error::*;
 use crate::player::*;
 use actix::*;
-use std::collections::HashMap;
 use rand::Rng;
+use std::collections::HashMap;
 use zoop_shared::player_id::PlayerId;
 use zoop_shared::player_message::PlayerMessage;
 use zoop_shared::room_id::RoomId;

@@ -1,6 +1,6 @@
 use crate::domain::game_config::GameConfig;
-use crate::systems::build_game::build_game;
 use crate::domain::room_config::RoomConfig;
+use crate::systems::build_game::build_game;
 use bevy::prelude::*;
 use url::Url;
 use uuid::Uuid;

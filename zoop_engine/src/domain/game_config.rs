@@ -1,11 +1,11 @@
+use crate::domain::room_config::RoomConfig;
+use crate::logic::math::*;
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 use url::{ParseError, Url};
 use zoop_shared::network_player::NetworkPlayer;
 use zoop_shared::player_id::PlayerId;
 use zoop_shared::room_id::RoomId;
-use crate::domain::room_config::RoomConfig;
-use crate::logic::math::*;
 
 #[derive(Resource, Clone, Debug)]
 pub struct GameConfig {

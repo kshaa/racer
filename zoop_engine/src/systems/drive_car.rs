@@ -1,8 +1,3 @@
-use bevy::prelude::*;
-use bevy_ggrs::*;
-#[cfg(feature = "debug_lines")]
-use bevy_prototype_debug_lines::*;
-use bevy_rapier2d::prelude::*;
 use crate::domain::car_body::CarMeta;
 use crate::domain::controls::Controls;
 use crate::domain::desync::*;
@@ -13,6 +8,11 @@ use crate::domain::tire::{TireMeta, TirePhysics};
 use crate::logic::math::*;
 use crate::logic::movement::*;
 use crate::systems::rollback_rapier_context::PhysicsEnabled;
+use bevy::prelude::*;
+use bevy_ggrs::*;
+#[cfg(feature = "debug_lines")]
+use bevy_prototype_debug_lines::*;
+use bevy_rapier2d::prelude::*;
 
 pub fn drive_car(
     config: Res<GameConfig>,
@@ -78,14 +78,17 @@ pub fn drive_car(
         if tire_meta.is_front && tire_meta.is_right {
             // Check the desync for this player if they're not a local handle
             // Did they send us some goodies?
-            let is_local = config.players.iter().enumerate().find(|(handle, p)|
-                handle.clone() == tire_player.handle && p.is_local).is_some();
+            let is_local = config
+                .players
+                .iter()
+                .enumerate()
+                .find(|(handle, p)| handle.clone() == tire_player.handle && p.is_local)
+                .is_some();
             if !is_local && game_input.last_confirmed_frame > 0 {
                 info!("Got frame data {:?}", game_input);
-                if let Some(frame_hash) = hashes
-                    .0
-                    .get_mut((game_input.last_confirmed_frame as usize) % config.desync_max_frames as usize)
-                {
+                if let Some(frame_hash) = hashes.0.get_mut(
+                    (game_input.last_confirmed_frame as usize) % config.desync_max_frames as usize,
+                ) {
                     assert!(
                         frame_hash.frame != game_input.last_confirmed_frame
                             || frame_hash.rapier_checksum == game_input.last_confirmed_hash,
@@ -106,7 +109,10 @@ pub fn drive_car(
         }
         if game_input.input > 0 {
             // Useful for desync observing
-            debug!("input {:?} from {}: {}", input_status, tire_player.handle, game_input.input)
+            debug!(
+                "input {:?} from {}: {}",
+                input_status, tire_player.handle, game_input.input
+            )
         }
         let controls = game_input;
 

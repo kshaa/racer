@@ -1,10 +1,10 @@
-use bevy::prelude::*;
-use bevy_rapier2d::prelude::*;
-use bevy_rapier2d::plugin::RapierContext;
-use ggrs::*;
-use crate::domain::rapier_rollback_state::RapierRollbackState;
 use crate::domain::checksum::*;
 use crate::domain::frames::*;
+use crate::domain::rapier_rollback_state::RapierRollbackState;
+use bevy::prelude::*;
+use bevy_rapier2d::plugin::RapierContext;
+use bevy_rapier2d::prelude::*;
+use ggrs::*;
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default, Resource, Hash, Reflect)]
 #[reflect(Hash)]
@@ -50,17 +50,13 @@ pub fn toggle_physics(
 ) {
     debug!(
         "Physics on frame {:?} {:?} {:?}",
-        current_frame.0,
-        physics_enabled.0,
-        enable_physics_after
+        current_frame.0, physics_enabled.0, enable_physics_after
     );
     let should_activate = enable_physics_after.is_enabled(current_frame.0);
     if physics_enabled.0 != should_activate {
         info!(
             "Toggling physics on frame {:?}: {:?} -> {:?}",
-            current_frame.0,
-            physics_enabled.0,
-            should_activate
+            current_frame.0, physics_enabled.0, should_activate
         );
         physics_enabled.0 = should_activate;
     }
