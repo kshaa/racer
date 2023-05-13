@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy_ggrs::RollbackIdProvider;
 use bevy_rapier2d::prelude::*;
 use crate::domain::car::spawn_car;
 use crate::domain::car_body::CarMeta;
@@ -57,18 +58,28 @@ pub fn destroy_scene(
     *rapier_context = RapierContext::default();
 }
 
-pub fn setup_scene(config: Res<GameConfig>, state: Res<GameState>, mut commands: Commands) {
-    spawn_scene(config.as_ref(), &state, &mut commands);
+pub fn setup_scene(
+    config: Res<GameConfig>,
+    state: Res<GameState>,
+    mut rip: ResMut<RollbackIdProvider>,
+    mut commands: Commands
+) {
+    spawn_scene(config.as_ref(), &state, &mut commands, &mut rip);
 }
 
-pub fn spawn_scene(config: &GameConfig, state: &GameState, commands: &mut Commands) {
+pub fn spawn_scene(
+    config: &GameConfig,
+    state: &GameState,
+    commands: &mut Commands,
+    rip: &mut RollbackIdProvider,
+) {
     println!("Spawning scene from state");
     for entity in state.entities.iter() {
         match entity {
             GameEntity::Stub() => (),
             GameEntity::Car(car) => {
                 println!("Spawning car for player {}", car.player.handle);
-                setup_car(config, car.clone(), commands)
+                setup_car(config, car.clone(), commands, rip)
             },
         }
     }
@@ -235,9 +246,15 @@ pub fn spawn_scene(config: &GameConfig, state: &GameState, commands: &mut Comman
 //     state.entities = new_entities;
 // }
 
-pub fn setup_car(config: &GameConfig, car: GameCar, commands: &mut Commands) {
+pub fn setup_car(
+    config: &GameConfig,
+    car: GameCar,
+    commands: &mut Commands,
+    rip: &mut RollbackIdProvider,
+) {
     spawn_car(
         commands,
+        rip,
         car.player.clone(),
         String::from(format!("Car #{}", car.player.handle)),
         config.car_half_size(),

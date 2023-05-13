@@ -1,11 +1,15 @@
 use bevy::prelude::*;
 use bevy_ggrs::*;
+use bevy_rapier2d::dynamics::{Sleeping, Velocity};
 use ggrs::*;
+use crate::domain::frames::CurrentFrame;
 use crate::domain::game_config::GameConfig;
 use crate::domain::game_state::GameState;
 use crate::domain::ggrs_config::GGRSConfig;
+use crate::domain::rapier_rollback_state::RapierRollbackState;
 use crate::services::websocket::*;
 use crate::systems::read_controls::read_controls;
+use crate::systems::rollback_rapier_context::EnablePhysicsAfter;
 
 pub fn build_network(
     game: &mut App,
@@ -26,6 +30,15 @@ pub fn build_ggrs(
         // define system that returns inputs given a player handle, so GGRS can send the inputs around
         .with_input_system(read_controls)
         // register types of components AND resources you want to be rolled back
+        .register_rollback_resource::<RapierRollbackState>()
+        .register_rollback_resource::<CurrentFrame>()
+        // Store everything that Rapier updates in its Writeback stage
+        .register_rollback_component::<GlobalTransform>()
+        .register_rollback_component::<Transform>()
+        .register_rollback_component::<Velocity>()
+        .register_rollback_component::<Sleeping>()
+        // Game stuff
+        .register_rollback_resource::<EnablePhysicsAfter>()
         // # physics
         // .register_rollback_component::<Velocity>()
         // .register_rollback_component::<AdditionalMassProperties>()
@@ -62,7 +75,7 @@ pub fn start_network_session(config: &GameConfig) -> P2PSession<GGRSConfig> {
         .with_num_players(config.players.len())
         .with_desync_detection_mode(ggrs::DesyncDetection::On { interval: 10 }) // (optional) set how often to exchange state checksums
         .with_max_prediction_window(12) // (optional) set max prediction window
-        .with_input_delay(2); // (optional) set input delay for the local player
+        .with_input_delay(3); // (optional) set input delay for the local player
 
     // Add players
     for (i, network_player) in config.players.iter().enumerate() {

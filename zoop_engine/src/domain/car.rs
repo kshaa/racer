@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy_ggrs::{Rollback, RollbackIdProvider};
 use bevy_rapier2d::prelude::*;
 use crate::domain::car_body::*;
 use crate::domain::game_state::*;
@@ -8,6 +9,7 @@ use crate::logic::math::*;
 
 pub fn spawn_car(
     commands: &mut Commands,
+    rip: &mut RollbackIdProvider,
     player: Player,
     car_title: String,
     car_half_size: Vec2,
@@ -17,16 +19,20 @@ pub fn spawn_car(
     tire_damping: Damping,
     car_physics: GameCar,
 ) {
-    let car = commands.spawn(CarBody::build(
+    let mut car = commands.spawn(CarBody::build(
         car_title.clone(),
         car_half_size,
         player.clone(),
         car_color,
         car_physics.physics.clone(),
     ));
+
+    car.insert(Rollback::new(rip.next_id()));
+
     let car_id = car.id();
     spawn_tires(
         commands,
+        rip,
         player.clone(),
         car_id.clone(),
         car_half_size,
@@ -40,6 +46,7 @@ pub fn spawn_car(
 
 fn spawn_tire(
     commands: &mut Commands,
+    rip: &mut RollbackIdProvider,
     player: Player,
     car: Entity,
     car_anchor: FixedJointBuilder,
@@ -61,12 +68,14 @@ fn spawn_tire(
         damping,
         physics,
     ));
+    tire.insert(Rollback::new(rip.next_id()));
 
     tire.insert(ImpulseJoint::new(car, car_anchor));
 }
 
 pub fn spawn_tires(
     commands: &mut Commands,
+    rip: &mut RollbackIdProvider,
     player: Player,
     car: Entity,
     car_half_size: Vec2,
@@ -78,6 +87,7 @@ pub fn spawn_tires(
 ) {
     spawn_tire(
         commands,
+        rip,
         player.clone(),
         car,
         tire_anchor(car_half_size, tire_half_size, true, true),
@@ -91,6 +101,7 @@ pub fn spawn_tires(
     );
     spawn_tire(
         commands,
+        rip,
         player.clone(),
         car,
         tire_anchor(car_half_size, tire_half_size, true, false),
@@ -104,6 +115,7 @@ pub fn spawn_tires(
     );
     spawn_tire(
         commands,
+        rip,
         player.clone(),
         car,
         tire_anchor(car_half_size, tire_half_size, false, true),
@@ -117,6 +129,7 @@ pub fn spawn_tires(
     );
     spawn_tire(
         commands,
+        rip,
         player.clone(),
         car,
         tire_anchor(car_half_size, tire_half_size, false, false),

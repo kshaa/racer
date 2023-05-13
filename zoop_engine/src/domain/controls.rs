@@ -1,16 +1,20 @@
 use bevy::prelude::*;
 use bytemuck::{Pod, Zeroable};
+use ggrs::*;
 
-const INPUT_ACCELERATE: u64 = 1 << 0;
-const INPUT_REVERSE: u64 = 1 << 1;
-const INPUT_BREAK: u64 = 1 << 2;
-const INPUT_STEER_RIGHT: u64 = 1 << 3;
-const INPUT_STEER_LEFT: u64 = 1 << 4;
+const INPUT_ACCELERATE: u16 = 1 << 0;
+const INPUT_REVERSE: u16 = 1 << 1;
+const INPUT_BREAK: u16 = 1 << 2;
+const INPUT_STEER_RIGHT: u16 = 1 << 3;
+const INPUT_STEER_LEFT: u16 = 1 << 4;
 
 #[repr(C)]
-#[derive(Copy, Clone, PartialEq, Eq, Pod, Zeroable)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Pod, Zeroable)]
 pub struct Controls {
-    pub input: u64,
+    pub input: u16,
+
+    pub last_confirmed_hash: u16,
+    pub last_confirmed_frame: Frame,
 }
 impl Controls {
     pub fn accelerating(&self) -> bool {
@@ -40,8 +44,10 @@ impl Controls {
         breaker: KeyCode,
         steer_right: KeyCode,
         steer_left: KeyCode,
+        last_confirmed_hash: u16,
+        last_confirmed_frame: Frame,
     ) -> Controls {
-        let mut serialized: u64 = 0;
+        let mut serialized: u16 = 0;
 
         if input.pressed(accelerator) {
             serialized |= INPUT_ACCELERATE
@@ -59,10 +65,28 @@ impl Controls {
             serialized |= INPUT_STEER_LEFT
         }
 
-        Controls { input: serialized }
+        Controls {
+            input: serialized,
+            last_confirmed_hash,
+            last_confirmed_frame
+        }
     }
 
-    pub fn from_wasd(input: &Input<KeyCode>) -> Controls {
+    pub fn empty(
+        last_confirmed_hash: u16,
+        last_confirmed_frame: Frame) -> Controls {
+        Controls {
+            input: 0,
+            last_confirmed_hash,
+            last_confirmed_frame
+        }
+    }
+
+    pub fn from_wasd(
+        input: &Input<KeyCode>,
+        last_confirmed_hash: u16,
+        last_confirmed_frame: Frame,
+    ) -> Controls {
         Controls::from_keys(
             input,
             KeyCode::W,
@@ -70,6 +94,8 @@ impl Controls {
             KeyCode::C,
             KeyCode::D,
             KeyCode::A,
+            last_confirmed_hash,
+            last_confirmed_frame
         )
     }
 }

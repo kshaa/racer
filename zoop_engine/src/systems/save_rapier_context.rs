@@ -20,10 +20,10 @@ pub fn save_rapier_context(
     // component tracking.  If you need this to happen less, I'd recommend not
     // using the plugin and implementing GGRS yourself.
     if let Ok(context_bytes) = bincode::serialize(rapier.as_ref()) {
-        info!("Context hash before save: {}", game_state.rapier_checksum);
+        debug!("Context hash before save: {}", game_state.rapier_checksum);
         game_state.rapier_checksum = fletcher16(&context_bytes);
         game_state.rapier_state = Some(context_bytes);
-        info!("Context hash after save: {}", game_state.rapier_checksum);
+        debug!("Context hash after save: {}", game_state.rapier_checksum);
 
         if let Some(frame_hash) = hashes
             .0
@@ -53,6 +53,6 @@ pub fn save_rapier_context(
             debug!("Stored frame hash at save: {:?}", frame_hash);
         }
 
-        info!("----- end frame {} -----", current_frame.0);
+        debug!("----- end frame {} -----", current_frame.0);
     }
 }

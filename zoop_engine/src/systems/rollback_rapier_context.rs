@@ -1,9 +1,72 @@
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 use bevy_rapier2d::plugin::RapierContext;
+use ggrs::*;
 use crate::domain::rapier_rollback_state::RapierRollbackState;
 use crate::domain::checksum::*;
-use crate::domain::frames::RollbackStatus;
+use crate::domain::frames::*;
+
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default, Resource, Hash, Reflect)]
+#[reflect(Hash)]
+pub struct PhysicsEnabled(pub bool);
+
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Resource, Hash, Reflect)]
+#[reflect(Hash, Resource, PartialEq)]
+pub struct EnablePhysicsAfter {
+    pub start: Frame,
+    pub end: Frame,
+}
+
+impl Default for EnablePhysicsAfter {
+    fn default() -> Self {
+        Self::with_default_offset(0, 0, 0)
+    }
+}
+
+impl EnablePhysicsAfter {
+    pub fn new(start: Frame, end: Frame) -> Self {
+        info!("Enabling after {:?},{:?}", start, end);
+        Self { start, end }
+    }
+
+    pub fn with_default_offset(offset: Frame, fps: i32, load_seconds: i32) -> Self {
+        Self::new(offset, offset + (fps * load_seconds) as i32)
+    }
+
+    pub fn is_enabled(&self, frame: Frame) -> bool {
+        // Since the starting frame is calculated at the end,
+        // when we rollback to the start frame we will have the enable after
+        // resource of that frame it was created as a result of, which is wrong.
+        // assume that 1 frame is actually good and should not be ignored
+        !(self.start < frame && frame < self.end)
+    }
+}
+
+pub fn toggle_physics(
+    enable_physics_after: Res<EnablePhysicsAfter>,
+    current_frame: Res<CurrentFrame>,
+    mut physics_enabled: ResMut<PhysicsEnabled>,
+    mut config: ResMut<RapierConfiguration>,
+) {
+    debug!(
+        "Physics on frame {:?} {:?} {:?}",
+        current_frame.0,
+        physics_enabled.0,
+        enable_physics_after
+    );
+    let should_activate = enable_physics_after.is_enabled(current_frame.0);
+    if physics_enabled.0 != should_activate {
+        info!(
+            "Toggling physics on frame {:?}: {:?} -> {:?}",
+            current_frame.0,
+            physics_enabled.0,
+            should_activate
+        );
+        physics_enabled.0 = should_activate;
+    }
+
+    config.physics_pipeline_active = physics_enabled.0;
+}
 
 pub fn reset_rapier(
     mut commands: Commands,
@@ -66,14 +129,14 @@ pub fn rollback_rapier_context(
     mut rapier: ResMut<RapierContext>,
 ) {
     let mut checksum = game_state.rapier_checksum;
-    info!("Context pre-hash at start: {:?}", checksum);
+    debug!("Context pre-hash at start: {:?}", checksum);
 
     // Serialize our physics state for hashing, to display the state in-flight.
     // This should not be necessary for this demo to work, as we will do the
     // real checksum during `save_game_state` at the end of the pipeline.
     if let Ok(context_bytes) = bincode::serialize(rapier.as_ref()) {
         checksum = fletcher16(&context_bytes);
-        info!("Context hash at start: {}", checksum);
+        debug!("Context hash at start: {}", checksum);
     }
 
     // Only restore our state if we are in a rollback.  This step is *critical*.
@@ -112,7 +175,7 @@ pub fn rollback_rapier_context(
         // Again, not necessary for the demo, just to show the rollback changes
         // as they occur.
         if let Ok(context_bytes) = bincode::serialize(rapier.as_ref()) {
-            info!(
+            debug!(
                 "Context hash after rollback: {}",
                 fletcher16(&context_bytes)
             );

@@ -1,4 +1,6 @@
 use bevy::prelude::*;
+use bevy_ggrs::Rollback;
+use bevy_rapier2d::prelude::*;
 use ggrs::*;
 use crate::domain::frames::*;
 use crate::domain::game_config::DESYNC_MAX_FRAMES;
@@ -66,11 +68,11 @@ pub fn frame_validator(
                     && validatable_frame.is_validatable(sx.frame)
                 {
                     // If this is causing your game to exit, you have a bug!
-                    assert_eq!(
-                        sx.rapier_checksum, rx.rapier_checksum,
-                        "Failed checksum checks {:?} != {:?}",
-                        sx, rx
-                    );
+                    let checksums_match = sx.rapier_checksum == rx.rapier_checksum;
+                    if !checksums_match {
+                        error!("Failed checksum checks {:?} != {:?}", sx, rx);
+                        panic!("Failed checksum checks {:?} != {:?}", sx, rx);
+                    }
 
                     // Set both as validated
                     info!("Frame validated {:?}", sx.frame);
@@ -79,5 +81,17 @@ pub fn frame_validator(
                 }
             }
         }
+    }
+}
+
+pub fn force_update_rollbackables(
+    mut t_query: Query<&mut Transform, With<Rollback>>,
+    mut v_query: Query<&mut Velocity, With<Rollback>>,
+) {
+    for mut t in t_query.iter_mut() {
+        t.set_changed();
+    }
+    for mut v in v_query.iter_mut() {
+        v.set_changed();
     }
 }

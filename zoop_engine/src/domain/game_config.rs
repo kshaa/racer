@@ -16,6 +16,7 @@ pub struct GameConfig {
     pub network: RoomConfig,
     pub players: Vec<NetworkPlayer>,
     pub fps: u16,
+    pub load_seconds: u16,
     pub canvas_selector: Option<String>,
     pub pixels_per_meter: f32,
     pub car_half_width: f32,
@@ -51,6 +52,7 @@ impl GameConfig {
             network,
             players,
             fps: 60,
+            load_seconds: 1,
             canvas_selector,
             pixels_per_meter: ppm,
             car_half_width: m2p(1.0),
@@ -112,7 +114,7 @@ impl GameConfig {
                 substeps: 1,
             },
             gravity: Vec2::ZERO,
-            force_update_from_transform_changes: false,
+            force_update_from_transform_changes: true,
             ..RapierConfiguration::default()
         }
     }

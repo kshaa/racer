@@ -73,6 +73,10 @@ pub fn build_game(game: &mut App, config: GameConfig) {
     game.insert_resource(FrameHashes::default());
     game.insert_resource(RxFrameHashes::default());
 
+    // physics toggling
+    game.insert_resource(EnablePhysicsAfter::with_default_offset(0, config.fps as i32, config.load_seconds as i32));
+    game.insert_resource(PhysicsEnabled::default());
+
     // Reset rapier
     game.add_startup_system(reset_rapier);
 
@@ -108,7 +112,7 @@ pub fn build_game(game: &mut App, config: GameConfig) {
             update_rollback_status,
             // these three must actually come after we update rollback status
             update_validatable_frame,
-            // toggle_physics,
+            toggle_physics,
             rollback_rapier_context,
             // Make sure to flush everything before we apply our game logic.
             apply_system_buffers,
@@ -117,6 +121,13 @@ pub fn build_game(game: &mut App, config: GameConfig) {
             // destroy_scene,
             // setup_scene,
             drive_car,
+            // The `frame_validator` relies on the execution of `apply_inputs` and must come after.
+            // It could happen anywhere else, I just stuck it here to be clear.
+            // If this is causing your game to quit, you have a bug!
+            frame_validator,
+            force_update_rollbackables,
+            // Make sure to flush everything before Rapier syncs
+            apply_system_buffers,
         ).chain().in_base_set(GameSet::Game))
         .add_systems(
             RapierPhysicsPlugin::<NoUserData>::get_systems(PhysicsSet::SyncBackend)

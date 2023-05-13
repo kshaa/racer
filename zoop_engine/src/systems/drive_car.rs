@@ -5,16 +5,19 @@ use bevy_prototype_debug_lines::*;
 use bevy_rapier2d::prelude::*;
 use crate::domain::car_body::CarMeta;
 use crate::domain::controls::Controls;
+use crate::domain::desync::*;
 use crate::domain::game_config::GameConfig;
 use crate::domain::ggrs_config::GGRSConfig;
 use crate::domain::player::Player;
 use crate::domain::tire::{TireMeta, TirePhysics};
 use crate::logic::math::*;
 use crate::logic::movement::*;
+use crate::systems::rollback_rapier_context::PhysicsEnabled;
 
 pub fn drive_car(
     config: Res<GameConfig>,
     inputs: Res<PlayerInputs<GGRSConfig>>,
+    mut hashes: ResMut<RxFrameHashes>,
     mut source_car_query: Query<(&CarMeta, &Transform, &Player), Without<TireMeta>>,
     mut source_tire_query: Query<
         (
@@ -71,9 +74,41 @@ pub fn drive_car(
         tire_player,
     ) in tire_query
     {
-        let controls = Controls {
-            input: inputs[tire_player.handle].0.input,
-        };
+        let (game_input, input_status) = inputs[tire_player.handle];
+        if tire_meta.is_front && tire_meta.is_right {
+            // Check the desync for this player if they're not a local handle
+            // Did they send us some goodies?
+            let is_local = config.players.iter().enumerate().find(|(handle, p)|
+                handle.clone() == tire_player.handle && p.is_local).is_some();
+            if !is_local && game_input.last_confirmed_frame > 0 {
+                info!("Got frame data {:?}", game_input);
+                if let Some(frame_hash) = hashes
+                    .0
+                    .get_mut((game_input.last_confirmed_frame as usize) % config.desync_max_frames as usize)
+                {
+                    assert!(
+                        frame_hash.frame != game_input.last_confirmed_frame
+                            || frame_hash.rapier_checksum == game_input.last_confirmed_hash,
+                        "Got new data for existing frame data {}",
+                        frame_hash.frame
+                    );
+
+                    // Only update this local data if the frame is new-to-us.
+                    // We don't want to overwrite any existing validated status
+                    // unless the frame is replacing what is already in the buffer.
+                    if frame_hash.frame != game_input.last_confirmed_frame {
+                        frame_hash.frame = game_input.last_confirmed_frame;
+                        frame_hash.rapier_checksum = game_input.last_confirmed_hash;
+                        frame_hash.validated = false;
+                    }
+                }
+            }
+        }
+        if game_input.input > 0 {
+            // Useful for desync observing
+            debug!("input {:?} from {}: {}", input_status, tire_player.handle, game_input.input)
+        }
+        let controls = game_input;
 
         // Apply controls to tire angle
         tire_physics.angle = tire_physics.angle

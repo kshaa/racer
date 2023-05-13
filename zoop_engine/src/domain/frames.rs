@@ -60,12 +60,12 @@ pub fn update_confirmed_frame(
         }
     }
 
-    info!("confirmed frame: {}", confirmed_frame.0);
+    debug!("confirmed frame: {}", confirmed_frame.0);
 }
 
 pub fn update_current_frame(mut current_frame: ResMut<CurrentFrame>) {
     current_frame.0 += 1;
-    info!("---- start frame {} ----", current_frame.0);
+    debug!("---- start frame {} ----", current_frame.0);
 }
 
 pub fn update_current_session_frame(
@@ -81,7 +81,7 @@ pub fn update_current_session_frame(
         }
     }
 
-    info!("current session frame: {}", current_session_frame.0);
+    debug!("current session frame: {}", current_session_frame.0);
 }
 
 pub fn update_rollback_status(
@@ -131,5 +131,5 @@ pub fn update_validatable_frame(
         std::cmp::min(current_session_frame.0, confirmed_frame.0),
     ) - (config.desync_max_frames as i32);
 
-    info!("validatable frame: {}", validatable_frame.0);
+    debug!("validatable frame: {}", validatable_frame.0);
 }
