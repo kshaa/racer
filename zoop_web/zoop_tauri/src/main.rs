@@ -6,7 +6,8 @@
 use clap::Parser;
 use uuid::Uuid;
 use zoop_cli::*;
-use zoop_shared::*;
+use zoop_shared::player_id::PlayerId;
+use zoop_shared::room_id::RoomId;
 
 #[tokio::main]
 async fn main() {
