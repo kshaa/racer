@@ -2,6 +2,7 @@ use crate::error::*;
 use crate::player::*;
 use actix::*;
 use std::collections::HashMap;
+use rand::Rng;
 use zoop_shared::player_id::PlayerId;
 use zoop_shared::player_message::PlayerMessage;
 use zoop_shared::room_id::RoomId;
@@ -78,9 +79,23 @@ impl Handler<FromToPlayer> for GameRoom {
 
     fn handle(&mut self, from_to: FromToPlayer, ctx: &mut Context<Self>) -> Self::Result {
         if let Some(address) = self.players.get(&from_to.message.address) {
-            let _ = address.try_send(FromPlayer {
-                message: PlayerMessage::from(from_to.from, from_to.message.message),
-            });
+            let should_drop: bool;
+            #[cfg(feature = "drop_messages")]
+            {
+                let mut rng = rand::thread_rng();
+                let rand = rng.gen_range(0.0..1.0);
+                should_drop = rand < 0.05; // 5% chance of dropping package
+            }
+            #[cfg(not(feature = "drop_messages"))]
+            {
+                should_drop = false;
+            }
+
+            if !should_drop {
+                let _ = address.try_send(FromPlayer {
+                    message: PlayerMessage::from(from_to.from, from_to.message.message),
+                });
+            }
         }
         ()
     }

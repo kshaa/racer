@@ -7,6 +7,7 @@ use crate::domain::colors::{ZOOP_BLACK, ZOOP_RED};
 use crate::domain::game_config::GameConfig;
 use crate::domain::game_state::{EntityPhysics, GameCar, GameEntity, GameState, GameTire};
 use crate::domain::player::Player;
+use crate::domain::spawn::DeterministicSpawn;
 use crate::domain::tire::{TireMeta, TirePhysics};
 
 pub fn init_scene(config: &GameConfig) -> GameState {
@@ -62,15 +63,23 @@ pub fn setup_scene(
     config: Res<GameConfig>,
     state: Res<GameState>,
     mut rip: ResMut<RollbackIdProvider>,
+    spawn_pool: Query<(Entity, &DeterministicSpawn)>,
     mut commands: Commands
 ) {
-    spawn_scene(config.as_ref(), &state, &mut commands, &mut rip);
+    // Get our entities and sort them by the spawn component index
+    let mut sorted_spawn_pool: Vec<(Entity, &DeterministicSpawn)> = spawn_pool.iter().collect();
+    sorted_spawn_pool.sort_by_key(|e| e.1.index);
+    // Get the Entities in reverse for easy popping
+    let mut sorted_entity_pool: Vec<Entity> = sorted_spawn_pool.iter().map(|p| p.0).rev().collect();
+
+    spawn_scene(config.as_ref(), &state, &mut commands, &mut sorted_entity_pool, &mut rip);
 }
 
 pub fn spawn_scene(
     config: &GameConfig,
     state: &GameState,
     commands: &mut Commands,
+    spawn_pool: &mut Vec<Entity>,
     rip: &mut RollbackIdProvider,
 ) {
     println!("Spawning scene from state");
@@ -79,9 +88,13 @@ pub fn spawn_scene(
             GameEntity::Stub() => (),
             GameEntity::Car(car) => {
                 println!("Spawning car for player {}", car.player.handle);
-                setup_car(config, car.clone(), commands, rip)
+                setup_car(config, car.clone(), commands, spawn_pool, rip)
             },
         }
+    }
+    while !spawn_pool.is_empty() {
+        let mut leftover = commands.entity(spawn_pool.pop().unwrap());
+        leftover.despawn();
     }
 }
 //
@@ -250,10 +263,12 @@ pub fn setup_car(
     config: &GameConfig,
     car: GameCar,
     commands: &mut Commands,
+    spawn_pool: &mut Vec<Entity>,
     rip: &mut RollbackIdProvider,
 ) {
     spawn_car(
         commands,
+        spawn_pool,
         rip,
         car.player.clone(),
         String::from(format!("Car #{}", car.player.handle)),

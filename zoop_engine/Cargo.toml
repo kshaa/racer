@@ -26,12 +26,13 @@ wasm-bindgen="0.2"
 wasm-opt = false
 
 [features]
-default = []
+default = ["rapier_debug_physics", "world_debug", "debug_lines"]
 bevy_dynamic = ["bevy/dynamic_linking"] # Experimental: Faster development environment
 rapier_debug_physics = ["bevy_rapier2d/debug-render-2d"] # Rapier debug wireframes
 world_debug = [] # Bevy ECS introspection UI
 debug_lines = ["dep:bevy_prototype_debug_lines"] # Game force vectors
 console_errors = ["dep:console_error_panic_hook"] # Print panics to browser console
+ggrs_desync_detection = [] # GGRS native desync detection (questionable)
 
 [lib]
 name = "zoop_engine"

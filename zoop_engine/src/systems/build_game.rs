@@ -11,6 +11,7 @@ use crate::domain::frames::*;
 use crate::domain::desync::*;
 use crate::domain::game_config::GameConfig;
 use crate::domain::game_set::GameSet;
+use crate::domain::spawn::*;
 use crate::systems::build_network::*;
 use crate::systems::drive_car::*;
 use crate::systems::manage_scene::*;
@@ -27,6 +28,13 @@ pub fn build_game(game: &mut App, config: GameConfig) {
     }
 
     info!("Starting game with config {:?}", config);
+
+    // Pre-spawn entities which will be re-used as game entities
+    // for some reason Rapier requires these to be deterministic
+    let _ = game
+        .world
+        .spawn_batch((0..101).map(DeterministicSpawnBundle::new))
+        .collect::<Vec<Entity>>();
 
     // Generic game resources
     game.insert_resource(config.clone())

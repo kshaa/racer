@@ -114,6 +114,8 @@ impl GameConfig {
                 substeps: 1,
             },
             gravity: Vec2::ZERO,
+            query_pipeline_active: false,
+            physics_pipeline_active: false,
             force_update_from_transform_changes: true,
             ..RapierConfiguration::default()
         }

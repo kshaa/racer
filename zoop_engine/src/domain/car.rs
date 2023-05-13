@@ -9,6 +9,7 @@ use crate::logic::math::*;
 
 pub fn spawn_car(
     commands: &mut Commands,
+    spawn_pool: &mut Vec<Entity>,
     rip: &mut RollbackIdProvider,
     player: Player,
     car_title: String,
@@ -19,19 +20,20 @@ pub fn spawn_car(
     tire_damping: Damping,
     car_physics: GameCar,
 ) {
-    let mut car = commands.spawn(CarBody::build(
+    let mut car = commands.entity(spawn_pool.pop().unwrap());
+    car.insert(CarBody::build(
         car_title.clone(),
         car_half_size,
         player.clone(),
         car_color,
         car_physics.physics.clone(),
     ));
-
     car.insert(Rollback::new(rip.next_id()));
 
     let car_id = car.id();
     spawn_tires(
         commands,
+        spawn_pool,
         rip,
         player.clone(),
         car_id.clone(),
@@ -46,6 +48,7 @@ pub fn spawn_car(
 
 fn spawn_tire(
     commands: &mut Commands,
+    spawn_pool: &mut Vec<Entity>,
     rip: &mut RollbackIdProvider,
     player: Player,
     car: Entity,
@@ -58,7 +61,8 @@ fn spawn_tire(
     damping: Damping,
     physics: GameTire,
 ) {
-    let mut tire = commands.spawn(Tire::build(
+    let mut tire = commands.entity(spawn_pool.pop().unwrap());
+    tire.insert(Tire::build(
         player,
         is_front,
         is_right,
@@ -69,12 +73,12 @@ fn spawn_tire(
         physics,
     ));
     tire.insert(Rollback::new(rip.next_id()));
-
     tire.insert(ImpulseJoint::new(car, car_anchor));
 }
 
 pub fn spawn_tires(
     commands: &mut Commands,
+    spawn_pool: &mut Vec<Entity>,
     rip: &mut RollbackIdProvider,
     player: Player,
     car: Entity,
@@ -87,6 +91,7 @@ pub fn spawn_tires(
 ) {
     spawn_tire(
         commands,
+        spawn_pool,
         rip,
         player.clone(),
         car,
@@ -101,6 +106,7 @@ pub fn spawn_tires(
     );
     spawn_tire(
         commands,
+        spawn_pool,
         rip,
         player.clone(),
         car,
@@ -115,6 +121,7 @@ pub fn spawn_tires(
     );
     spawn_tire(
         commands,
+        spawn_pool,
         rip,
         player.clone(),
         car,
@@ -129,6 +136,7 @@ pub fn spawn_tires(
     );
     spawn_tire(
         commands,
+        spawn_pool,
         rip,
         player.clone(),
         car,

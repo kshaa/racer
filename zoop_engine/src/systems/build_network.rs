@@ -15,7 +15,7 @@ pub fn build_network(
     game: &mut App,
     config: &GameConfig,
 ) {
-    let session = start_network_session(&config);
+    let mut session = start_network_session(&config);
     build_ggrs(game, config);
     game.insert_resource(Session::P2PSession(session));
 }

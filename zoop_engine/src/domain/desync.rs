@@ -1,9 +1,10 @@
 use bevy::prelude::*;
-use bevy_ggrs::Rollback;
+use bevy_ggrs::{Rollback, Session};
 use bevy_rapier2d::prelude::*;
 use ggrs::*;
 use crate::domain::frames::*;
 use crate::domain::game_config::DESYNC_MAX_FRAMES;
+use crate::domain::ggrs_config::GGRSConfig;
 
 /// Metadata we need to store about frames we've rendered locally
 #[derive(Default, Hash, Resource, PartialEq, Eq, Debug)]
@@ -54,7 +55,34 @@ pub fn frame_validator(
     mut hashes: ResMut<FrameHashes>,
     mut rx_hashes: ResMut<RxFrameHashes>,
     validatable_frame: Res<ValidatableFrame>,
+    mut session: ResMut<Session<GGRSConfig>>,
 ) {
+    #[cfg(feature = "ggrs_desync_detection")]
+    {
+        if let Session::P2PSession(s) = session.as_mut() {
+            let events = s.events().collect::<Vec<GGRSEvent<GGRSConfig>>>();
+            for event in events {
+                if let GGRSEvent::DesyncDetected {
+                    /// Frame of the checksums
+                    frame,
+                    /// local checksum for the given frame
+                    local_checksum,
+                    /// remote checksum for the given frame
+                    remote_checksum,
+                    /// remote address of the endpoint.
+                    addr,
+                } = event {
+                    let msg = format!(
+                        "Desync on frame {:?}, local checksum {:?} != remote checksum {:?} for address {:?}",
+                        frame,
+                        local_checksum,
+                        remote_checksum,
+                        addr);
+                    panic!("{}", msg);
+                }
+            }
+        }
+    }
     for (i, rx) in rx_hashes.0.iter_mut().enumerate() {
         // Check every confirmed frame that has not been validated
         if rx.frame > 0 && !rx.validated {
