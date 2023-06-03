@@ -1,5 +1,5 @@
+use crate::actors::room::GameRoom;
 use crate::error::*;
-use crate::room::*;
 use actix::*;
 use actix_web::Result;
 use std::collections::HashMap;

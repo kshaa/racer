@@ -1,6 +1,6 @@
+use crate::actors::room::{FromPlayer, FromToPlayer, GameRoom, Register, ToPlayer};
 use crate::error::AppError;
 use crate::misc::*;
-use crate::room::*;
 use actix::fut::Ready;
 use actix::*;
 use actix_web_actors::ws;

@@ -1,5 +1,4 @@
-use crate::error::*;
-use crate::player::*;
+use crate::actors::player::GamePlayer;
 use actix::*;
 use rand::Rng;
 use std::collections::HashMap;

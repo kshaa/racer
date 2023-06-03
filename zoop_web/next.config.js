@@ -7,6 +7,11 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  env: {
+    zoopWebsocketServer: "ws://localhost:8080",
+    zoopHttpServer: "http://localhost:8080",
+    launcherHttpServer: "http://localhost:3000",
+  }
 }
 
 module.exports = nextConfig
