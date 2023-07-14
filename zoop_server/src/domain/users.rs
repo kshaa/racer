@@ -18,12 +18,12 @@ impl User {
     fn generate(username: String) -> User {
         let id = PlayerId::new();
         let pg = PasswordGenerator {
-            length: 16,
+            length: 20,
             numbers: true,
             lowercase_letters: true,
             uppercase_letters: true,
-            symbols: true,
-            spaces: true,
+            symbols: false,
+            spaces: false,
             exclude_similar_characters: false,
             strict: true,
         };

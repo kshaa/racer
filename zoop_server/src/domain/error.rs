@@ -28,6 +28,8 @@ impl Display for WrappedError {
 pub enum AppError {
     #[display(fmt = "Invalid user ticket, unauthorized")]
     UserTicketWrong(),
+    #[display(fmt = "A room requires at least 2 players")]
+    NotEnoughPlayers(),
     #[display(fmt = "User with id {} already exists", id.value)]
     UserAlreadyExists { id: PlayerId },
     #[display(fmt = "User with name '{}' already exists", username)]
@@ -44,8 +46,14 @@ pub enum AppError {
     GameAlreadyExists { id: RoomId },
     #[display(fmt = "Game with id {} does not exist", id.value)]
     GameDoesNotExist { id: RoomId },
+    #[display(fmt = "Only the game creator can alter game config")]
+    NotGameCreator(),
+    #[display(fmt = "Game not started yet")]
+    GameNotReady(),
     #[display(fmt = "Room failed to respond to player registration")]
     RoomNotResponding(),
+    #[display(fmt = "Room is already full of players")]
+    RoomFull(),
     #[display(fmt = "Unrecognized or bad message received")]
     BadMessage(),
 }
@@ -54,13 +62,17 @@ impl actix_web::error::ResponseError for AppError {
     fn status_code(&self) -> StatusCode {
         match *self {
             AppError::UserTicketWrong { .. } => StatusCode::UNAUTHORIZED,
+            AppError::NotEnoughPlayers { .. } => StatusCode::BAD_REQUEST,
             AppError::UserAlreadyExists { .. } => StatusCode::BAD_REQUEST,
             AppError::UsernameAlreadyExists { .. } => StatusCode::BAD_REQUEST,
             AppError::NotAlphanumericUsername { .. } => StatusCode::BAD_REQUEST,
             AppError::TooLongUsername { .. } => StatusCode::BAD_REQUEST,
             AppError::GameAlreadyExists { .. } => StatusCode::BAD_REQUEST,
             AppError::GameDoesNotExist { .. } => StatusCode::BAD_REQUEST,
+            AppError::NotGameCreator { .. } => StatusCode::BAD_REQUEST,
+            AppError::GameNotReady { .. } => StatusCode::NOT_FOUND,
             AppError::RoomNotResponding { .. } => StatusCode::BAD_GATEWAY,
+            AppError::RoomFull { .. } => StatusCode::BAD_REQUEST,
             AppError::BadMessage { .. } => StatusCode::BAD_REQUEST,
         }
     }

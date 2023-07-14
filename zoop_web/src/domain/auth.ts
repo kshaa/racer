@@ -7,8 +7,11 @@ import * as t from 'io-ts'
 import {pipe} from "fp-ts/function";
 
 // Auth state
+export const UserId = t.string
+export type UserIdT = t.TypeOf<typeof UserId>
+
 export const User = t.type({
-  id: t.string,
+  id: UserId,
   username: t.string,
   ticket: t.string
 })

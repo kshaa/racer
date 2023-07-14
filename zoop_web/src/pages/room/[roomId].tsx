@@ -2,42 +2,58 @@ import Head from 'next/head'
 import styles from '@/styles/Home.module.css'
 import Alert from "@mui/material/Alert";
 import {useRouter} from 'next/router'
-import {RoomJoin, validateRoomJoin} from "@/domain/roomJoin"
+import {RoomConnect, validateRoomConnect} from "@/domain/roomConnect"
 import * as O from 'fp-ts/Option'
-import {joinRoom} from "@/services/game";
+import {connectRoom} from "@/services/game";
 import {useEffect} from "react";
 import {pipe} from "fp-ts/function";
 import {isTauriClient} from "@/services/tauri";
 import Link from "next/link";
+import {AppError} from "@/domain/appError";
 
 export default function Room() {
   const router = useRouter()
   const isRouterReady = Object.keys(router.query).length > 0
-  const isMainPlayer = (router.query.isMainPlayer as string) === "true"
-  const player0 = router.query.player0 as string
-  const player1 = router.query.player1 as string
+  const httpBaseurl = router.query.httpBaseurl as string
+  const wsBaseurl = router.query.wsBaseurl as string
+  const userId = router.query.userId as string
+  const userTicket = router.query.userTicket as string
   const roomId = router.query.roomId as string
-  const validation = validateRoomJoin(
-    isMainPlayer,
-    player0,
-    player1,
+  const roomConfigJson = router.query.roomConfigJson as string
+
+  const validation = validateRoomConnect(
+    httpBaseurl,
+    "httpBaseUrl",
+    wsBaseurl,
+    "wsBaseUrl",
+    userId,
+    "userId",
+    userTicket,
+    "userTicket",
     roomId,
-    "player0",
-    "player1",
-    "roomId"
+    "roomId",
+    roomConfigJson,
+    "roomConfigJson"
   )
   let errors =
     pipe(
       O.getLeft(validation),
-      O.filter((_: Map<string, string>) => isRouterReady),
+      O.filter((_: Map<string, AppError>) => isRouterReady),
+      O.map((validation) => {
+        const next = new Map<string, string>();
+        for (let [key, error] of Object.entries(validation)) {
+          next.set(key, error.message)
+        }
+        return next
+      }),
       O.getOrElse(() => new Map())
     )
 
   let roomJoin = O.getRight(validation)
   useEffect(() => {
-    O.map<RoomJoin, void>((details) => {
-      console.log("Joining room", details, performance.timing.navigationStart)
-      joinRoom(details, "#game")
+    O.map<RoomConnect, void>((details) => {
+      console.log("Connecting to room", details, performance.timing.navigationStart)
+      connectRoom(details, "#game")
     })(roomJoin)
   }, [roomId]);
 

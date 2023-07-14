@@ -8,9 +8,17 @@ const nextConfig = {
     unoptimized: true,
   },
   env: {
-    zoopWebsocketServer: "ws://localhost:8080",
-    zoopHttpServer: "http://localhost:8080",
-    launcherHttpServer: "http://localhost:3000",
+    zoopWebsocketServer: "wss://9241-87-246-163-177.ngrok-free.app",
+    zoopHttpServer: "https://9241-87-246-163-177.ngrok-free.app",
+    launcherHttpServer: "https://9241-87-246-163-177.ngrok-free.app",
+  },
+  async rewrites() {
+    return [
+      {
+        source: '/api/:path*',
+        destination: 'http://localhost:8080/:path*' // Proxy to Backend
+      }
+    ]
   }
 }
 

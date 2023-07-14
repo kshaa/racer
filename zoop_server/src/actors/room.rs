@@ -40,6 +40,7 @@ pub struct ToPlayer {
 /// Define game room
 pub struct GameRoom {
     id: RoomId,
+    player_count: u32,
     players: HashMap<PlayerId, Addr<GamePlayer>>,
 }
 impl GameRoom {
@@ -47,9 +48,10 @@ impl GameRoom {
         self.players.insert(id, address)
     }
 
-    pub fn of(id: RoomId) -> GameRoom {
+    pub fn of(id: RoomId, player_count: u32) -> GameRoom {
         GameRoom {
             id,
+            player_count,
             players: HashMap::new(),
         }
     }

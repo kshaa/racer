@@ -117,3 +117,8 @@ a {
   transition: 0.3s ease-in-out color;
   font-weight: 800 !important;
 }
+
+/*#game {*/
+/*  height: calc(100vh - 85px) !important;*/
+/*  width: calc(100vw - 30px) !important;*/
+/*}*/

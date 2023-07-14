@@ -21,21 +21,23 @@ async fn main() {
 
 fn run_tauri() {
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![join_game])
+        .invoke_handler(tauri::generate_handler![connect_game])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
 
 #[tauri::command]
-async fn join_game(
-    is_main_player: bool,
-    player_0_uuid: String,
-    player_1_uuid: String,
+async fn connect_game(
+    http_baseurl: String,
+    ws_baseurl: String,
+    user_uuid: String,
+    user_ticket: String,
     room_uuid: String,
+    room_config_json: String,
 ) -> Result<(), String> {
-    let player_id_0 = PlayerId(Uuid::parse_str(&player_0_uuid).unwrap());
-    let player_id_1 = PlayerId(Uuid::parse_str(&player_1_uuid).unwrap());
+    let user_id = PlayerId(Uuid::parse_str(&user_uuid).unwrap());
     let room_id = RoomId(Uuid::parse_str(&room_uuid).unwrap());
+    let room_config = serde_json::from_str(&room_config_json).unwrap();
 
-    exec_join_game(is_main_player, player_id_0, player_id_1, room_id)
+    exec_connect_game(http_baseurl, ws_baseurl, user_id, user_ticket, room_id, room_config)
 }

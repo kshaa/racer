@@ -7,59 +7,73 @@ use uuid::Uuid;
 use wasm_bindgen::prelude::*;
 use zoop_shared::network_player::NetworkPlayer;
 use zoop_shared::player_id::PlayerId;
+use zoop_shared::room_config::GameRoomConfig;
 use zoop_shared::room_id::RoomId;
 
 #[wasm_bindgen]
 pub fn networked_game_raw(
-    is_main_player: bool,
-    player_0_uuid: String,
-    player_1_uuid: String,
+    http_baseurl: String,
+    ws_baseurl: String,
+    user_uuid: String,
+    user_ticket: String,
     room_uuid: String,
+    room_config_json: String,
     canvas_selector: Option<String>,
 ) {
-    let player_id_0 = PlayerId(Uuid::parse_str(&player_0_uuid).unwrap());
-    let player_id_1 = PlayerId(Uuid::parse_str(&player_1_uuid).unwrap());
+    let player_id = PlayerId(Uuid::parse_str(&user_uuid).unwrap());
+    let room_config = serde_json::from_str(&room_config_json).unwrap();
     let room_id = RoomId(Uuid::parse_str(&room_uuid).unwrap());
 
     networked_game(
-        is_main_player,
-        player_id_0,
-        player_id_1,
+        http_baseurl,
+        ws_baseurl,
+        player_id,
+        user_ticket,
         room_id,
+        room_config,
         canvas_selector,
     )
 }
 
 pub fn networked_game(
-    is_main_player: bool,
-    player_id_0: PlayerId,
-    player_id_1: PlayerId,
+    http_baseurl: String,
+    ws_baseurl: String,
+    user_id: PlayerId,
+    user_ticket: String,
     room_id: RoomId,
+    room_config: GameRoomConfig,
     canvas_selector: Option<String>,
 ) {
-    // Define players
-    let player_0 = NetworkPlayer {
-        id: player_id_0,
-        is_local: is_main_player,
+    // Define local and remote players
+    let my_network_player = NetworkPlayer {
+        id: user_id.clone(),
+        is_local: true,
         is_spectator: false,
     };
-    let player_1 = NetworkPlayer {
-        id: player_id_1,
-        is_local: !is_main_player,
-        is_spectator: false,
-    };
-    let players: Vec<NetworkPlayer> = vec![player_0.clone(), player_1.clone()];
+    let mut network_players: Vec<NetworkPlayer> =
+        room_config.players.into_iter()
+            .filter(|p| p.clone() != user_id.clone())
+            .map(|p| NetworkPlayer {
+                id: p.clone(),
+                is_local: false,
+                is_spectator: false,
+            })
+            .collect();
+    network_players.push(my_network_player);
+    network_players.sort_by_key(|p| p.id.0.to_string().clone());
 
     // Define network
-    let server_address = Url::parse("ws://localhost:8080/").unwrap();
+    let server_address = Url::parse(&ws_baseurl).unwrap();
     let room = room_id;
     let network = RoomConfig {
         server_address,
         room,
+        user_id,
+        user_ticket
     };
 
     // Build game
-    let config = GameConfig::default(network, players, canvas_selector);
+    let config = GameConfig::default(network, network_players, canvas_selector);
     let mut game = App::new();
     build_game(&mut game, config);
 

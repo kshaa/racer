@@ -85,9 +85,8 @@ pub fn start_network_session(config: &GameConfig) -> P2PSession<GGRSConfig> {
     }
 
     // Start the GGRS session
-    let local_player = config.players.iter().find(|p| p.is_local).unwrap();
     let room_address = config
-        .game_room_address(config.network.room.clone(), local_player.id.clone())
+        .game_room_address()
         .unwrap();
     let socket = NonBlockingWebSocket::connect(room_address.to_string()).unwrap();
 

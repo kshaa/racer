@@ -8,15 +8,15 @@ import {useState} from "react";
 import {pipe} from "fp-ts/function";
 import * as E from "fp-ts/Either";
 import {useRouter} from "next/router";
-import {Register, UserT, validateUsername} from "@/domain/auth";
+import {validateUsername} from "@/domain/auth";
 import * as O from "fp-ts/Option";
 import {addFormKeyError, flushErrors, keyErrorMessage, newFormErrors} from "@/domain/formError";
 import {selectAuthState, setUser} from "@/redux/auth";
 import {useDispatch, useSelector } from "react-redux";
-import {AppError} from "@/domain/appError";
 import {postRegistration} from "@/services/auth";
 import {getOrElse, isNone, isSome} from "fp-ts/Option";
 import Alert from "@mui/material/Alert";
+import {envConfig} from "@/services/config";
 
 export default function Auth() {
   const router = useRouter()
@@ -27,24 +27,25 @@ export default function Auth() {
 
   const [username, setUsername] = useState("")
   const usernameErrors = keyErrorMessage(errors, O.some("username"))
-  const onUserNameChange = (e: any) =>
-    flushErrors(setErrors, O.some("username")) ||
-    setUsername(e.target.value);
+  const onUserNameChange = (e: any) => {
+    flushErrors(setErrors, O.some("username"))
+    setUsername(e.target.value)
+  }
 
   const formMetaErrors = keyErrorMessage(errors, O.none)
 
   const onSubmit = () => {
     pipe(
       validateUsername(username),
-      E.match<AppError, Register>(
+      E.match(
         // This would be cleaner (more functional and would not be as nested)
         // with TaskEither, Validation & effects at the end
         (error) => addFormKeyError(setErrors, O.some("username"), error),
         (register) =>
-          postRegistration(process.env.zoopHttpServer, register).then((result) =>
+          postRegistration(envConfig.httpServer, register).then((result) =>
             pipe(
               result,
-              E.match<AppError, UserT>(
+              E.match(
               (error) => addFormKeyError(setErrors, O.none, error),
               (user) => {
                   dispatch(setUser(O.some(user)))

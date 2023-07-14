@@ -72,15 +72,14 @@ impl GameConfig {
     }
 
     pub fn game_room_address(
-        &self,
-        room_address: RoomId,
-        player_id: PlayerId,
+        &self
     ) -> Result<Url, ParseError> {
         self.network.server_address.join(
             format!(
-                "/game/{}/as/{}",
-                room_address.0.to_string(),
-                player_id.0.to_string()
+                "/api/game/connect/{}/as/{}/ticket/{}",
+                self.network.room.0.to_string(),
+                self.network.user_id.0.to_string(),
+                self.network.user_ticket
             )
             .as_str(),
         )

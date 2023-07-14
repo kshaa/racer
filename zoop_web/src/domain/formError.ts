@@ -3,7 +3,7 @@ import {AppError} from "@/domain/appError";
 import * as O from "fp-ts/Option";
 
 export interface FormErrors {
-   values: Map<Option<string>, [AppError]>
+   values: Map<Option<string>, AppError[]>
 }
 
 export function cloneErrors(errors: FormErrors): FormErrors {
@@ -15,7 +15,7 @@ export function cloneErrors(errors: FormErrors): FormErrors {
 
 export function newFormErrors(): FormErrors {
   return {
-    values: new Map<Option<string>, [AppError]>()
+    values: new Map<Option<string>, AppError[]>()
   }
 }
 

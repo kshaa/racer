@@ -1,22 +1,14 @@
 import Head from 'next/head'
 import styles from '@/styles/Home.module.css'
-import Button from '@mui/material/Button';
-import TextField from "@mui/material/TextField";
 import Stack from "@mui/material/Stack";
 import * as O from "fp-ts/Option"
-import Checkbox from "@mui/material/Checkbox";
-import {FormControlLabel, Tab, Tabs, Typography} from "@mui/material";
-import {ReactNode, useEffect, useState} from "react";
-import {pipe} from "fp-ts/function";
-import {RoomJoin, validateRoomJoin} from "@/domain/roomJoin";
-import * as E from "fp-ts/Either";
-import {stringify as uuidStringify} from "uuid";
+import {Tab, Tabs} from "@mui/material";
+import {useEffect, useState} from "react";
 import {useRouter} from "next/router";
-import Link from 'next/link';
 import {useSelector} from "react-redux";
 import {selectAuthState} from "@/redux/auth";
 import {isNone} from "fp-ts/Option";
-import {extractAuthUsername} from "@/domain/auth";
+import {UserT} from "@/domain/auth";
 import {Box} from "@mui/system";
 import {TabPanel} from "@/components/tabPanel";
 import CreateGame from "@/components/createGame";
@@ -25,26 +17,35 @@ import JoinGame from "@/components/joinGame";
 export default function Home() {
   const router = useRouter()
   const authState = useSelector(selectAuthState);
+  const user = authState.user
 
   useEffect(() => {
     if (isNone(authState.user)) router.push("/auth")
   }, []);
 
-  // const [errors, setErrors] = useState(new Map<string, string>());
-  // const flushErrors = () => setErrors(new Map())
-  // const [isMainPlayer, setIsMainPlayer] = useState(true);
-  // const onMainPlayerChange = (e: any) => flushErrors() || setIsMainPlayer(!isMainPlayer);
-  // const [player0, setPlayer0] = useState("");
-  // const onPlayer0Change = (e: any) => flushErrors() || setPlayer0(e.target.value);
-  // const [player1, setPlayer1] = useState("");
-  // const onPlayer1Change = (e: any) => flushErrors() || setPlayer1(e.target.value);
-  // const [roomId, setRoomId] = useState("");
-  // const onRoomChange = (e: any) => flushErrors() || setRoomId(e.target.value);
-
   const [activeTab, setActiveTab] = useState(0);
   const onTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue);
   };
+
+  function renderForUser(knownUser: UserT) {
+    return (
+      <Stack spacing={2} sx={{ width: "100%", maxWidth: "500px", marginTop: "5rem" }}>
+        <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+          <Tabs value={activeTab} onChange={onTabChange}>
+            <Tab label="Join game" />
+            <Tab label="Create game" />
+          </Tabs>
+        </Box>
+        <TabPanel value={activeTab} index={0}>
+          <JoinGame user={knownUser}></JoinGame>
+        </TabPanel>
+        <TabPanel value={activeTab} index={1}>
+          <CreateGame user={knownUser}></CreateGame>
+        </TabPanel>
+      </Stack>
+    )
+  }
 
   return (
     <>
@@ -55,20 +56,7 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main className={styles.main}>
-        <Stack spacing={2} sx={{ width: "100%", maxWidth: "500px", marginTop: "5rem" }}>
-          <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-            <Tabs value={activeTab} onChange={onTabChange}>
-              <Tab label="Join game" />
-              <Tab label="Create game" />
-            </Tabs>
-          </Box>
-          <TabPanel value={activeTab} index={0}>
-            <JoinGame></JoinGame>
-          </TabPanel>
-          <TabPanel value={activeTab} index={1}>
-            <CreateGame></CreateGame>
-          </TabPanel>
-        </Stack>
+        {O.match(() => <div></div>, renderForUser)(user)}
       </main>
     </>
   )

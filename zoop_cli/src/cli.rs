@@ -3,6 +3,7 @@ use std::process::Command;
 use uuid::Uuid;
 use zoop_engine::networked_game;
 use zoop_shared::player_id::PlayerId;
+use zoop_shared::room_config::GameRoomConfig;
 use zoop_shared::room_id::RoomId;
 
 #[derive(Parser)]
@@ -14,31 +15,40 @@ pub struct CLI {
 
 #[derive(Subcommand)]
 pub enum CLICommand {
-    JoinGame {
+    ConnectGame {
         #[arg(long)]
-        is_main_player: bool,
+        http_baseurl: String,
         #[arg(long)]
-        player_id_0: Uuid,
+        ws_baseurl: String,
         #[arg(long)]
-        player_id_1: Uuid,
+        user_id: Uuid,
+        #[arg(long)]
+        user_ticket: String,
         #[arg(long)]
         room_id: Uuid,
+        #[arg(long)]
+        room_config_json: String
     },
 }
 
 pub async fn run_command(command: CLICommand) {
     match command {
-        CLICommand::JoinGame {
-            is_main_player,
-            player_id_0,
-            player_id_1,
+        CLICommand::ConnectGame {
+            http_baseurl,
+            ws_baseurl,
+            user_id,
+            user_ticket,
             room_id,
+            room_config_json
         } => {
+            let room_config = serde_json::from_str(&room_config_json).unwrap();
             networked_game(
-                is_main_player,
-                PlayerId(player_id_0),
-                PlayerId(player_id_1),
+                http_baseurl,
+                ws_baseurl,
+                PlayerId(user_id),
+                user_ticket,
                 RoomId(room_id),
+                room_config,
                 None,
             );
         }
@@ -46,30 +56,33 @@ pub async fn run_command(command: CLICommand) {
 }
 
 #[allow(dead_code)]
-pub fn exec_join_game(
-    is_main_player: bool,
-    player_id_0: PlayerId,
-    player_id_1: PlayerId,
+pub fn exec_connect_game(
+    http_baseurl: String,
+    ws_baseurl: String,
+    user_id: PlayerId,
+    user_ticket: String,
     room_id: RoomId,
+    room_config: GameRoomConfig,
 ) -> Result<(), String> {
     let exe = std::env::current_exe().unwrap();
-    let p0 = player_id_0.0.to_string();
-    let p1 = player_id_1.0.to_string();
-    let r = room_id.0.to_string();
-    let main_flag = String::from("--is-main-player");
-    let mut args = vec![
-        "join-game",
-        "--player-id-0",
-        &p0,
-        "--player-id-1",
-        &p1,
+    let user_uuid = user_id.0.to_string();
+    let room_uuid = room_id.0.to_string();
+    let room_config_json = serde_json::to_string(&room_config).unwrap();
+    let args = vec![
+        "connect-game",
+        "--http-baseurl",
+        &http_baseurl,
+        "--ws-baseurl",
+        &ws_baseurl,
+        "--user-id",
+        &user_uuid,
+        "--user-ticket",
+        &user_ticket,
         "--room-id",
-        &r,
+        &room_uuid,
+        "--room-config-json",
+        &room_config_json
     ];
-
-    if is_main_player {
-        args.push(&main_flag)
-    }
 
     println!("{:?}, {:?}", exe, args);
 

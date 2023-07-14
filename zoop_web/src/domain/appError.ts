@@ -3,21 +3,34 @@ import * as t from "io-ts";
 export enum AppErrorKind {
   RegistrationEmptyError,
   FetchError,
+  ParseError,
   ServerAppError
 }
 
 export interface AppError {
   kind: AppErrorKind
-  message: String
+  message: string
 }
 
 export class FetchError implements AppError {
   kind = AppErrorKind.FetchError
-  message: String
+  message: string
   error: any
   constructor(error: any) {
     this.error = error
     this.message = `Failed to contact server: ${error}`
+  }
+}
+
+export class ParseError implements AppError {
+  kind = AppErrorKind.ParseError
+  message: string
+  parseKind: string
+  reason: string
+  constructor(parseKind: string, reason: string) {
+    this.parseKind = parseKind
+    this.reason = reason
+    this.message = `Failed to decode '${parseKind}': ${reason}`
   }
 }
 
@@ -35,9 +48,9 @@ export type ServerErrorT = t.TypeOf<typeof ServerError>
 export class ServerAppError implements AppError {
   kind = AppErrorKind.ServerAppError
   error: ServerErrorT
-  message: String
+  message: string
   constructor(error: ServerErrorT) {
     this.error = error
-    this.message = `Problem: ${error.message}`
+    this.message = `Request refused: ${error.message}`
   }
 }
