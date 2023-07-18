@@ -1,16 +1,16 @@
-use std::cell::Cell;
 use crate::actors::room::GameRoom;
 use crate::error::*;
 use actix::*;
 use actix_web::Result;
+
+use std::cell::Cell;
 use std::collections::HashMap;
 use std::sync::Arc;
-use tokio::sync::futures::Notified;
-use zoop_shared::player_id::PlayerId;
-use zoop_shared::room_id::RoomId;
+
 use tokio::sync::Notify;
-use serde::{Deserialize, Serialize};
+use zoop_shared::player_id::PlayerId;
 use zoop_shared::room_config::GameRoomConfig;
+use zoop_shared::room_id::RoomId;
 
 /// Game room metadata
 pub struct GameLobbyRoomMetadata {
@@ -19,7 +19,7 @@ pub struct GameLobbyRoomMetadata {
     pub created_by: PlayerId,
     pub players: Cell<Vec<PlayerId>>,
     pub address: Cell<Option<Addr<GameRoom>>>,
-    pub ready_notification: Arc<Notify>
+    pub ready_notification: Arc<Notify>,
 }
 
 impl GameLobbyRoomMetadata {
@@ -39,26 +39,38 @@ pub struct GameLobby {
     pub games: HashMap<RoomId, GameLobbyRoomMetadata>,
 }
 impl GameLobby {
-    pub fn create(&mut self, room_id: RoomId, player_count: u32, by: PlayerId) -> Result<(), AppError> {
-        match self
-            .games
-            .insert(room_id.clone(), GameLobbyRoomMetadata {
+    pub fn create(
+        &mut self,
+        room_id: RoomId,
+        player_count: u32,
+        by: PlayerId,
+    ) -> Result<(), AppError> {
+        match self.games.insert(
+            room_id.clone(),
+            GameLobbyRoomMetadata {
                 room_id,
                 player_count,
                 created_by: by.clone(),
                 players: Cell::new(vec![by]),
                 address: Cell::new(None),
-                ready_notification: Arc::new(Notify::new())
-            })
-        {
+                ready_notification: Arc::new(Notify::new()),
+            },
+        ) {
             None => Ok(()),
             Some(room) => Err(AppError::GameAlreadyExists { id: room.room_id }),
         }
     }
 
-    pub fn enqueue_player(&mut self, room_id: RoomId, player: PlayerId, starter: fn(RoomId, u32) -> Addr<GameRoom>) -> Result<(), AppError> {
+    pub fn enqueue_player(
+        &mut self,
+        room_id: RoomId,
+        player: PlayerId,
+        starter: fn(RoomId, u32) -> Addr<GameRoom>,
+    ) -> Result<(), AppError> {
         match self.games.get_mut(&room_id) {
-            None => Err(AppError::GameDoesNotExist { id: room_id.clone() }),
+            None => Err(AppError::GameDoesNotExist {
+                id: room_id.clone(),
+            }),
             Some(room) => {
                 let players = room.players.get_mut();
                 let address = room.address.get_mut();
@@ -85,7 +97,9 @@ impl GameLobby {
     // Left - game does not exist
     pub fn ready(&mut self, room_id: RoomId) -> Result<Option<Arc<Notify>>, AppError> {
         match self.games.get_mut(&room_id) {
-            None => Err(AppError::GameDoesNotExist { id: room_id.clone() }),
+            None => Err(AppError::GameDoesNotExist {
+                id: room_id.clone(),
+            }),
             Some(room) => {
                 if room.is_ready() {
                     Ok(None)
@@ -98,7 +112,9 @@ impl GameLobby {
 
     pub fn config(&mut self, room_id: RoomId) -> Result<GameRoomConfig, AppError> {
         match self.games.get_mut(&room_id) {
-            None => Err(AppError::GameDoesNotExist { id: room_id.clone() }),
+            None => Err(AppError::GameDoesNotExist {
+                id: room_id.clone(),
+            }),
             Some(room) => {
                 if room.is_ready() {
                     Ok(GameRoomConfig {

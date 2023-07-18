@@ -36,7 +36,7 @@ pub fn networked_game_raw(
 }
 
 pub fn networked_game(
-    http_baseurl: String,
+    _http_baseurl: String,
     ws_baseurl: String,
     user_id: PlayerId,
     user_ticket: String,
@@ -50,15 +50,16 @@ pub fn networked_game(
         is_local: true,
         is_spectator: false,
     };
-    let mut network_players: Vec<NetworkPlayer> =
-        room_config.players.into_iter()
-            .filter(|p| p.clone() != user_id.clone())
-            .map(|p| NetworkPlayer {
-                id: p.clone(),
-                is_local: false,
-                is_spectator: false,
-            })
-            .collect();
+    let mut network_players: Vec<NetworkPlayer> = room_config
+        .players
+        .into_iter()
+        .filter(|p| p.clone() != user_id.clone())
+        .map(|p| NetworkPlayer {
+            id: p.clone(),
+            is_local: false,
+            is_spectator: false,
+        })
+        .collect();
     network_players.push(my_network_player);
     network_players.sort_by_key(|p| p.id.0.to_string().clone());
 
@@ -69,7 +70,7 @@ pub fn networked_game(
         server_address,
         room,
         user_id,
-        user_ticket
+        user_ticket,
     };
 
     // Build game

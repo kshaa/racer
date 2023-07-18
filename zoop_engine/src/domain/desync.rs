@@ -55,7 +55,7 @@ pub fn frame_validator(
     mut hashes: ResMut<FrameHashes>,
     mut rx_hashes: ResMut<RxFrameHashes>,
     validatable_frame: Res<ValidatableFrame>,
-    mut session: ResMut<Session<GGRSConfig>>,
+    _session: ResMut<Session<GGRSConfig>>,
 ) {
     #[cfg(feature = "ggrs_desync_detection")]
     {

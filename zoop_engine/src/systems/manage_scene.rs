@@ -1,11 +1,11 @@
 use crate::domain::car::spawn_car;
-use crate::domain::car_body::CarMeta;
+
 use crate::domain::colors::{ZOOP_BLACK, ZOOP_RED};
 use crate::domain::game_config::GameConfig;
-use crate::domain::game_state::{EntityPhysics, GameCar, GameEntity, GameState, GameTire};
+use crate::domain::game_state::{GameCar, GameEntity, GameState};
 use crate::domain::player::Player;
 use crate::domain::spawn::DeterministicSpawn;
-use crate::domain::tire::{TireMeta, TirePhysics};
+
 use bevy::prelude::*;
 use bevy_ggrs::RollbackIdProvider;
 use bevy_rapier2d::prelude::*;

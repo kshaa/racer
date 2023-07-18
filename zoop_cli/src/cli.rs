@@ -27,7 +27,7 @@ pub enum CLICommand {
         #[arg(long)]
         room_id: Uuid,
         #[arg(long)]
-        room_config_json: String
+        room_config_json: String,
     },
 }
 
@@ -39,7 +39,7 @@ pub async fn run_command(command: CLICommand) {
             user_id,
             user_ticket,
             room_id,
-            room_config_json
+            room_config_json,
         } => {
             let room_config = serde_json::from_str(&room_config_json).unwrap();
             networked_game(
@@ -81,7 +81,7 @@ pub fn exec_connect_game(
         "--room-id",
         &room_uuid,
         "--room-config-json",
-        &room_config_json
+        &room_config_json,
     ];
 
     println!("{:?}, {:?}", exe, args);

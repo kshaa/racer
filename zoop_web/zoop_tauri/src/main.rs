@@ -39,5 +39,12 @@ async fn connect_game(
     let room_id = RoomId(Uuid::parse_str(&room_uuid).unwrap());
     let room_config = serde_json::from_str(&room_config_json).unwrap();
 
-    exec_connect_game(http_baseurl, ws_baseurl, user_id, user_ticket, room_id, room_config)
+    exec_connect_game(
+        http_baseurl,
+        ws_baseurl,
+        user_id,
+        user_ticket,
+        room_id,
+        room_config,
+    )
 }

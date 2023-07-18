@@ -1,4 +1,3 @@
-use crate::actors::room::*;
 use crate::domain::error::*;
 use crate::domain::users::{User, Users};
 use actix::*;

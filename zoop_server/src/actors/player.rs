@@ -1,6 +1,6 @@
 use crate::actors::room::{FromPlayer, FromToPlayer, GameRoom, Register, ToPlayer};
 use crate::error::AppError;
-use crate::misc::*;
+
 use actix::fut::Ready;
 use actix::*;
 use actix_web_actors::ws;
@@ -43,7 +43,7 @@ impl GamePlayer {
 }
 impl Handler<ToPlayer> for GamePlayer {
     type Result = ();
-    fn handle(&mut self, to: ToPlayer, ctx: &mut ws::WebsocketContext<Self>) -> Self::Result {
+    fn handle(&mut self, to: ToPlayer, _ctx: &mut ws::WebsocketContext<Self>) -> Self::Result {
         let _ = self.room_address.try_send(FromToPlayer {
             from: self.player_id.clone(),
             message: to.message,

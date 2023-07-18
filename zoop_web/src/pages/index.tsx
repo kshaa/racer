@@ -21,7 +21,7 @@ export default function Home() {
 
   useEffect(() => {
     if (isNone(authState.user)) router.push("/auth")
-  }, []);
+  }, [authState.user, router]);
 
   const [activeTab, setActiveTab] = useState(0);
   const onTabChange = (event: React.SyntheticEvent, newValue: number) => {

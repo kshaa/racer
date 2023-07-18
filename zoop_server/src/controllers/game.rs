@@ -1,20 +1,18 @@
-use std::fs::read;
 use crate::actors::player::*;
 use crate::actors::room::*;
 use crate::domain::error::*;
 use crate::domain::lobby::*;
 use crate::domain::users::{Ticket, Users};
 use actix::*;
+use actix_web::web;
 use actix_web::web::Data;
 use actix_web::HttpRequest;
 use actix_web::HttpResponse;
 use actix_web::{get, post, Result};
-use actix_web::{web, ResponseError};
 use actix_web_actors::ws;
-use std::sync::{Arc, Mutex};
-use tokio::sync::futures::Notified;
-use tokio::sync::Notify;
-use uuid::Uuid;
+
+use std::sync::Mutex;
+
 use zoop_shared::player_id::PlayerId;
 use zoop_shared::room_config::GameRoomConfig;
 use zoop_shared::room_id::RoomId;
@@ -37,7 +35,9 @@ pub async fn game_room_spawn(
         let mut lobby = lobby_mutex.lock().unwrap();
         let address = RoomId::new();
         println!("Attempting to create room {}", &address);
-        lobby.create(address.clone(), player_count.clone(), player_id.clone()).map(|_| web::Json(address))
+        lobby
+            .create(address.clone(), player_count.clone(), player_id.clone())
+            .map(|_| web::Json(address))
     }
 }
 
@@ -55,9 +55,13 @@ pub async fn game_room_join(
         Err(AppError::UserTicketWrong())
     } else {
         let mut lobby = lobby_mutex.lock().unwrap();
-        let starter = |room_id: RoomId, player_count: u32| GameRoom::of(room_id.clone(), player_count.clone()).start();
+        let starter = |room_id: RoomId, player_count: u32| {
+            GameRoom::of(room_id.clone(), player_count.clone()).start()
+        };
         println!("Attempting to enqueue {} in room {}", &player_id, &room_id);
-        lobby.enqueue_player(room_id.clone(),player_id.clone(), starter).map(|_| web::Json(()))
+        lobby
+            .enqueue_player(room_id.clone(), player_id.clone(), starter)
+            .map(|_| web::Json(()))
     }
 }
 
@@ -69,7 +73,7 @@ pub async fn game_room_ready(
 ) -> Result<web::Json<GameRoomConfig>, AppError> {
     let (room_id, player_id, ticket) = path.as_ref();
 
-    let readiness= {
+    let readiness = {
         let users = users_mutex.lock().unwrap();
         let is_user_with_ticket = users.has(player_id, ticket.clone());
 
@@ -91,8 +95,8 @@ pub async fn game_room_ready(
         Ok(Some(notification)) => {
             notification.notified().await;
             lazy_config_result().map(|r| web::Json(r))
-        },
-        Err(err) => Err(err)
+        }
+        Err(err) => Err(err),
     }
 }
 
@@ -130,9 +134,11 @@ pub async fn game_room_connect(
         Err(actix_web::Error::from(AppError::UserTicketWrong()))
     } else {
         let mut lobby = lobby_mutex.lock().unwrap();
-        let mut room_address =
-            lobby.games.get_mut(room_id)
-                .map(|m| m.address.get_mut().clone()).flatten();
+        let room_address = lobby
+            .games
+            .get_mut(room_id)
+            .map(|m| m.address.get_mut().clone())
+            .flatten();
         match room_address {
             Some(address) => {
                 let actor = GamePlayer {

@@ -7,5 +7,5 @@ pub struct RoomConfig {
     pub server_address: Url,
     pub room: RoomId,
     pub user_id: PlayerId,
-    pub user_ticket: String
+    pub user_ticket: String,
 }

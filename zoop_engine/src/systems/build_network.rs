@@ -12,7 +12,7 @@ use bevy_rapier2d::dynamics::{Sleeping, Velocity};
 use ggrs::*;
 
 pub fn build_network(game: &mut App, config: &GameConfig) {
-    let mut session = start_network_session(&config);
+    let session = start_network_session(&config);
     build_ggrs(game, config);
     game.insert_resource(Session::P2PSession(session));
 }
@@ -85,9 +85,7 @@ pub fn start_network_session(config: &GameConfig) -> P2PSession<GGRSConfig> {
     }
 
     // Start the GGRS session
-    let room_address = config
-        .game_room_address()
-        .unwrap();
+    let room_address = config.game_room_address().unwrap();
     let socket = NonBlockingWebSocket::connect(room_address.to_string()).unwrap();
 
     session_builder.start_p2p_session(socket).unwrap()

@@ -4,8 +4,6 @@ use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 use url::{ParseError, Url};
 use zoop_shared::network_player::NetworkPlayer;
-use zoop_shared::player_id::PlayerId;
-use zoop_shared::room_id::RoomId;
 
 #[derive(Resource, Clone, Debug)]
 pub struct GameConfig {
@@ -71,9 +69,7 @@ impl GameConfig {
         }
     }
 
-    pub fn game_room_address(
-        &self
-    ) -> Result<Url, ParseError> {
+    pub fn game_room_address(&self) -> Result<Url, ParseError> {
         self.network.server_address.join(
             format!(
                 "/api/game/connect/{}/as/{}/ticket/{}",

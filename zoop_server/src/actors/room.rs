@@ -1,6 +1,6 @@
 use crate::actors::player::GamePlayer;
 use actix::*;
-use rand::Rng;
+
 use std::collections::HashMap;
 use zoop_shared::player_id::PlayerId;
 use zoop_shared::player_message::PlayerMessage;
@@ -62,7 +62,7 @@ impl Actor for GameRoom {
 impl Handler<Ping> for GameRoom {
     type Result = Result<bool, std::io::Error>;
 
-    fn handle(&mut self, msg: Ping, ctx: &mut Context<Self>) -> Self::Result {
+    fn handle(&mut self, _msg: Ping, _ctx: &mut Context<Self>) -> Self::Result {
         println!("Ping received");
         Ok(true)
     }
@@ -70,7 +70,7 @@ impl Handler<Ping> for GameRoom {
 impl Handler<Register> for GameRoom {
     type Result = ();
 
-    fn handle(&mut self, register: Register, ctx: &mut Context<Self>) -> Self::Result {
+    fn handle(&mut self, register: Register, _ctx: &mut Context<Self>) -> Self::Result {
         let _ = self.add_player(register.id.clone(), register.address);
         println!("Room {} accepted player {}", self.id, register.id);
     }
@@ -78,7 +78,7 @@ impl Handler<Register> for GameRoom {
 impl Handler<FromToPlayer> for GameRoom {
     type Result = ();
 
-    fn handle(&mut self, from_to: FromToPlayer, ctx: &mut Context<Self>) -> Self::Result {
+    fn handle(&mut self, from_to: FromToPlayer, _ctx: &mut Context<Self>) -> Self::Result {
         if let Some(address) = self.players.get(&from_to.message.address) {
             let should_drop: bool;
             #[cfg(feature = "drop_messages")]

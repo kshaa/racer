@@ -55,7 +55,7 @@ export default function Room() {
       console.log("Connecting to room", details, performance.timing.navigationStart)
       connectRoom(details, "#game")
     })(roomJoin)
-  }, [roomId]);
+  }, [roomId, roomJoin]);
 
   return (
     <>
