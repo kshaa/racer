@@ -8,9 +8,9 @@ const nextConfig = {
     unoptimized: true,
   },
   env: {
-    zoopWebsocketServer: "wss://9241-87-246-163-177.ngrok-free.app",
-    zoopHttpServer: "https://9241-87-246-163-177.ngrok-free.app",
-    launcherHttpServer: "https://9241-87-246-163-177.ngrok-free.app",
+    zoopWebsocketServer: `ws://localhost:3000`,
+    zoopHttpServer: `http://localhost:3000`,
+    launcherHttpServer: `http://localhost:3000`,
   },
   async rewrites() {
     return [

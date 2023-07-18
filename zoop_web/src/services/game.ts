@@ -104,7 +104,7 @@ export function connectRoomNative(roomDetails: RoomConnect) {
       userUuid: uuidStringify(roomDetails.userId.value),
       userTicket: roomDetails.userTicket,
       roomUuid: uuidStringify(roomDetails.roomId.value),
-      roomConfigJson: JSON.stringify(roomDetails)
+      roomConfigJson: JSON.stringify(roomDetails.roomConfig)
     }
   ).then(console.log).catch(console.error)
 }

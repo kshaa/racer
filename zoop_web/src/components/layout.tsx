@@ -4,7 +4,10 @@ import {selectAuthState} from "@/redux/auth";
 import {isSome} from "fp-ts/Option";
 import {extractAuthUsername} from "@/domain/auth";
 
-export default function Layout({ children }) {
+export interface LayoutProps {
+  children: any
+}
+export default function Layout(props: LayoutProps) {
   const authState = useSelector(selectAuthState);
   const isActive = isSome(authState.user)
   const username = extractAuthUsername(authState)
@@ -12,7 +15,7 @@ export default function Layout({ children }) {
   return (
     <div>
       <Header isActive={isActive} username={username} />
-      <main>{children}</main>
+      <main>{props.children}</main>
     </div>
   );
 }
