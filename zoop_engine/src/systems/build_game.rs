@@ -13,7 +13,6 @@ use crate::domain::desync::*;
 use crate::domain::frames::*;
 use crate::domain::game_config::GameConfig;
 use crate::domain::game_set::GameSet;
-use crate::domain::ggrs_config::GGRSConfig;
 use crate::domain::spawn::*;
 use crate::systems::build_network::*;
 use crate::systems::drive_car::*;
@@ -124,7 +123,7 @@ pub fn build_game(game: &mut App, config: GameConfig) {
     }
 
     // Construct game logic schedule
-    let mut game_schedule = game.get_schedule_mut(game_schedule_label)
+    let game_schedule = game.get_schedule_mut(game_schedule_label)
         .unwrap()
         .configure_sets(
             (

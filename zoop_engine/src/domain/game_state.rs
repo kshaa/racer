@@ -47,6 +47,7 @@ pub struct GameTire {
     pub entity_physics: EntityPhysics,
 }
 impl GameTire {
+    #[allow(dead_code)]
     pub fn of(
         transform: Transform,
         velocity: Velocity,

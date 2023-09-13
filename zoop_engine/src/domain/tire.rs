@@ -43,6 +43,7 @@ pub struct Tire {
     player: Player,
 }
 
+#[allow(dead_code)]
 pub struct TireEntities {
     pub top_right: Entity,
     pub top_left: Entity,

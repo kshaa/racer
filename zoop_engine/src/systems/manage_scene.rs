@@ -38,6 +38,7 @@ pub fn init_scene(config: &GameConfig) -> GameState {
     GameState { entities: cars }
 }
 
+#[allow(dead_code)]
 pub fn destroy_scene(
     config: Res<GameConfig>,
     player_entities: Query<(Entity, With<Player>)>,
