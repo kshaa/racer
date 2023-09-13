@@ -11,7 +11,7 @@ pub struct GameConfig {
     // - distance in pixels
     // - angles in radians
     // - percentages from 0.0 to 1.0
-    pub network: RoomConfig,
+    pub network: Option<RoomConfig>,
     pub players: Vec<NetworkPlayer>,
     pub fps: u16,
     pub load_seconds: u16,
@@ -40,7 +40,7 @@ impl GameConfig {
     }
 
     pub fn default(
-        network: RoomConfig,
+        network: Option<RoomConfig>,
         players: Vec<NetworkPlayer>,
         canvas_selector: Option<String>,
     ) -> GameConfig {
@@ -69,16 +69,16 @@ impl GameConfig {
         }
     }
 
-    pub fn game_room_address(&self) -> Result<Url, ParseError> {
-        self.network.server_address.join(
+    pub fn game_room_address(&self) -> Option<Result<Url, ParseError>> {
+        self.network.clone().map(|network| network.server_address.join(
             format!(
                 "/api/game/connect/{}/as/{}/ticket/{}",
-                self.network.room.0.to_string(),
-                self.network.user_id.0.to_string(),
-                self.network.user_ticket
+                network.room.0.to_string(),
+                network.user_id.0.to_string(),
+                network.user_ticket
             )
             .as_str(),
-        )
+        ))
     }
 
     pub fn tire_damping(&self) -> Damping {

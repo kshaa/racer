@@ -1,7 +1,7 @@
 use clap::{Parser, Subcommand};
 use std::process::Command;
 use uuid::Uuid;
-use zoop_engine::networked_game;
+use zoop_engine::{demo_game, networked_game};
 use zoop_shared::player_id::PlayerId;
 use zoop_shared::room_config::GameRoomConfig;
 use zoop_shared::room_id::RoomId;
@@ -15,6 +15,7 @@ pub struct CLI {
 
 #[derive(Subcommand)]
 pub enum CLICommand {
+    DemoGame {},
     ConnectGame {
         #[arg(long)]
         http_baseurl: String,
@@ -33,6 +34,7 @@ pub enum CLICommand {
 
 pub async fn run_command(command: CLICommand) {
     match command {
+        CLICommand::DemoGame {} => demo_game(),
         CLICommand::ConnectGame {
             http_baseurl,
             ws_baseurl,

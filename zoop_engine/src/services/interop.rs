@@ -66,15 +66,38 @@ pub fn networked_game(
     // Define network
     let server_address = Url::parse(&ws_baseurl).unwrap();
     let room = room_id;
-    let network = RoomConfig {
+    let network = Some(RoomConfig {
         server_address,
         room,
         user_id,
         user_ticket,
-    };
+    });
 
     // Build game
     let config = GameConfig::default(network, network_players, canvas_selector);
+    let mut game = App::new();
+    build_game(&mut game, config);
+
+    // Run game
+    game.run();
+}
+
+pub fn demo_game() {
+    // Build game
+    let canvas_selector = None; // TODO: Add web support for demo game
+    let no_network = None;
+    let player1 = NetworkPlayer {
+        id: PlayerId::new(),
+        is_local: true,
+        is_spectator: false,
+    };
+    let player2 = NetworkPlayer {
+        id: PlayerId::new(),
+        is_local: true,
+        is_spectator: false,
+    };
+    let players = vec!(player1, player2);
+    let config = GameConfig::default(no_network, players, canvas_selector);
     let mut game = App::new();
     build_game(&mut game, config);
 

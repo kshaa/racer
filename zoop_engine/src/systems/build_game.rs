@@ -1,4 +1,6 @@
+use bevy::ecs::schedule::{LogLevel, ScheduleBuildSettings};
 use bevy::prelude::*;
+use bevy::prelude::CoreSet::FixedUpdate;
 use bevy_ggrs::*;
 #[cfg(feature = "world_debug")]
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
@@ -11,6 +13,7 @@ use crate::domain::desync::*;
 use crate::domain::frames::*;
 use crate::domain::game_config::GameConfig;
 use crate::domain::game_set::GameSet;
+use crate::domain::ggrs_config::GGRSConfig;
 use crate::domain::spawn::*;
 use crate::systems::build_network::*;
 use crate::systems::drive_car::*;
@@ -97,13 +100,31 @@ pub fn build_game(game: &mut App, config: GameConfig) {
     game.insert_resource(state);
     game.add_startup_system(setup_scene);
 
+    // Define game logic schedule
+    let game_schedule_label = GGRSSchedule;
+
     // Configure networking
-    build_network(game, &config);
+    if config.network.is_some() {
+        // Init network and configure schedule
+        build_network(game, &config);
+    } else {
+        // Manually attach game logic schedule
+        let mut schedule = Schedule::default();
+        schedule.set_build_settings(ScheduleBuildSettings {
+            ambiguity_detection: LogLevel::Error,
+            ..default()
+        });
+        game.add_schedule(GGRSSchedule, schedule);
+        // Add fixed schedule runner
+        game.add_systems((manual_frame_advance,).in_base_set(FixedUpdate));
+        game.insert_resource(FixedTime::new_from_secs(1.0 / (config.fps as f32)));
+        // Add fallback for rollback id provider
+        let rollback_provider = RollbackIdProvider::default();
+        game.insert_resource(rollback_provider);
+    }
 
-    // Synchronized game logic stage
-    let game_schedule = GGRSSchedule;
-
-    game.get_schedule_mut(game_schedule)
+    // Construct game logic schedule
+    let mut game_schedule = game.get_schedule_mut(game_schedule_label)
         .unwrap()
         .configure_sets(
             (
@@ -135,8 +156,10 @@ pub fn build_game(game: &mut App, config: GameConfig) {
             )
                 .chain()
                 .in_base_set(GameSet::Rollback),
-        )
-        .add_systems(
+        );
+
+    if config.network.is_some() {
+        game_schedule.add_systems(
             (
                 // destroy_scene,
                 // setup_scene,
@@ -150,9 +173,15 @@ pub fn build_game(game: &mut App, config: GameConfig) {
                 apply_system_buffers,
             )
                 .chain()
-                .in_base_set(GameSet::Game),
-        )
-        .add_systems(
+                .in_base_set(GameSet::Game)
+        );
+    } else {
+        game_schedule.add_systems(
+            (drive_car,).chain().in_base_set(GameSet::Game));
+    }
+
+
+    game_schedule.add_systems(
             RapierPhysicsPlugin::<NoUserData>::get_systems(PhysicsSet::SyncBackend)
                 .in_base_set(PhysicsSet::SyncBackend),
         )
@@ -200,3 +229,7 @@ fn setup_graphics(mut commands: Commands) {
 fn rapier_stub() {}
 
 fn rapier_stub2() {}
+
+fn manual_frame_advance(world: &mut World) {
+    world.run_schedule(GGRSSchedule);
+}

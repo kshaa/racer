@@ -13,10 +13,13 @@ use bevy_ggrs::*;
 #[cfg(feature = "debug_lines")]
 use bevy_prototype_debug_lines::*;
 use bevy_rapier2d::prelude::*;
+use ggrs::InputStatus;
+use crate::domain::controls::Controls;
 
 pub fn drive_car(
     config: Res<GameConfig>,
-    inputs: Res<PlayerInputs<GGRSConfig>>,
+    inputs: Option<Res<PlayerInputs<GGRSConfig>>>,
+    fallback_inputs: Res<Input<KeyCode>>,
     mut hashes: ResMut<RxFrameHashes>,
     mut source_car_query: Query<(&CarMeta, &Transform, &Player), Without<TireMeta>>,
     mut source_tire_query: Query<
@@ -74,7 +77,13 @@ pub fn drive_car(
         tire_player,
     ) in tire_query
     {
-        let (game_input, input_status) = inputs[tire_player.handle];
+        let (game_input, input_status) =
+            if config.network.is_some() {
+                inputs.as_ref().unwrap()[tire_player.handle]
+            } else {
+                (Controls::for_nth_player(&fallback_inputs, tire_player.handle), InputStatus::Confirmed)
+            };
+
         if tire_meta.is_front && tire_meta.is_right {
             // Check the desync for this player if they're not a local handle
             // Did they send us some goodies?

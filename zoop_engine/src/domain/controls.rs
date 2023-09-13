@@ -96,4 +96,28 @@ impl Controls {
             last_confirmed_frame,
         )
     }
+
+    pub fn from_ijkl(
+        input: &Input<KeyCode>,
+        last_confirmed_hash: u16,
+        last_confirmed_frame: Frame,
+    ) -> Controls {
+        Controls::from_keys(
+            input,
+            KeyCode::I,
+            KeyCode::K,
+            KeyCode::N,
+            KeyCode::L,
+            KeyCode::J,
+            last_confirmed_hash,
+            last_confirmed_frame,
+        )
+    }
+
+    pub fn for_nth_player(input: &Input<KeyCode>, n: usize) -> Controls {
+        let hash: u16 = 0;
+        let frame: Frame = 0;
+        if n == 0 { Controls::from_wasd(input, hash, frame) }
+        else { Controls::from_ijkl(input, hash, frame) }
+    }
 }
