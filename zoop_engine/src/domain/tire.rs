@@ -4,6 +4,8 @@ use bevy::core::Name;
 use bevy::math::*;
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
+use bevy_sprite3d::{Sprite3d, Sprite3dBundle, Sprite3dParams};
+use crate::domain::spritesheets::SpriteSheets;
 
 #[derive(Copy, Clone, Debug, Default, Component, Reflect, FromReflect)]
 #[reflect(Component)]
@@ -39,7 +41,7 @@ pub struct Tire {
     active_events: ActiveEvents,
     ccd: Ccd,
     collision_groups: CollisionGroups,
-    sprite_bundle: SpriteBundle,
+    sprite3d: Sprite3dBundle,
     player: Player,
 }
 
@@ -53,6 +55,9 @@ pub struct TireEntities {
 
 impl Tire {
     pub fn build(
+        spritesheets: &SpriteSheets,
+        sprite_params: &mut Sprite3dParams,
+        pixels_per_meter: f32,
         player: Player,
         is_front: bool,
         is_right: bool,
@@ -87,16 +92,16 @@ impl Tire {
             friction: Friction::default(),
             active_events: ActiveEvents::empty(),
             ccd: Ccd::disabled(),
-            collision_groups: CollisionGroups::default(),
-            sprite_bundle: SpriteBundle {
+            collision_groups: CollisionGroups::new(Group::NONE, Group::NONE),
+            sprite3d: Sprite3d {
+                image: spritesheets.tire.clone(),
+                pixels_per_metre: 500.0 / pixels_per_meter,
+                // custom_size: Some(half_size * 2.0),
+                partial_alpha: true,
+                unlit: true,
                 transform: physics.entity_physics.transform,
-                sprite: Sprite {
-                    color,
-                    custom_size: Some(half_size * 2.0),
-                    ..default()
-                },
                 ..default()
-            },
+            }.bundle(sprite_params),
             player,
         }
     }

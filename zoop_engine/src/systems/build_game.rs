@@ -1,19 +1,23 @@
+use bevy::asset::LoadState;
 use bevy::ecs::schedule::{LogLevel, ScheduleBuildSettings};
 use bevy::prelude::*;
-use bevy::prelude::CoreSet::FixedUpdate;
+use bevy::prelude::CoreSet::*;
 use bevy_ggrs::*;
 #[cfg(feature = "world_debug")]
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 #[cfg(feature = "debug_lines")]
 use bevy_prototype_debug_lines::*;
 use bevy_rapier2d::prelude::*;
+use bevy_sprite3d::{Sprite3d, Sprite3dParams, Sprite3dPlugin};
 
 use crate::domain::colors::*;
 use crate::domain::desync::*;
 use crate::domain::frames::*;
 use crate::domain::game_config::GameConfig;
+use crate::domain::game_readiness::GameReadiness;
 use crate::domain::game_set::GameSet;
 use crate::domain::spawn::*;
+use crate::domain::spritesheets::SpriteSheets;
 use crate::systems::build_network::*;
 use crate::systems::drive_car::*;
 use crate::systems::manage_scene::*;
@@ -40,7 +44,7 @@ pub fn build_game(game: &mut App, config: GameConfig) {
 
     // Generic game resources
     game.insert_resource(config.clone())
-        .insert_resource(ClearColor(ZOOP_YELLOW));
+        .insert_resource(ClearColor(ZOOP_DARK_GRAY));
 
     // Default Bevy plugins
     game.add_plugins(DefaultPlugins.set(WindowPlugin {
@@ -70,6 +74,9 @@ pub fn build_game(game: &mut App, config: GameConfig) {
     #[cfg(feature = "world_debug")]
     game.add_plugin(WorldInspectorPlugin::new());
 
+    // Add 3d sprites
+    game.add_plugin(Sprite3dPlugin);
+
     // Init rollback & desync resources
     // frame updating
     game.insert_resource(LastFrame::default());
@@ -78,6 +85,7 @@ pub fn build_game(game: &mut App, config: GameConfig) {
     game.insert_resource(ConfirmedFrame::default());
     game.insert_resource(RollbackStatus::default());
     game.insert_resource(ValidatableFrame::default());
+    game.add_state::<GameReadiness>();
 
     // desync detection
     game.insert_resource(FrameHashes::default());
@@ -97,7 +105,18 @@ pub fn build_game(game: &mut App, config: GameConfig) {
     // Init game state
     let state = init_scene(&config);
     game.insert_resource(state);
-    game.add_startup_system(setup_scene);
+    game.add_startup_system(init_materials);
+    game.add_system(setup_scene.run_if(in_state(GameReadiness::Loading)));
+
+    // Define loading logic
+    game.insert_resource(SpriteSheets::default());
+    game.add_startup_system(|asset_server: Res<AssetServer>, mut spritesheets: ResMut<SpriteSheets>| {
+        let car: Handle<Image> = asset_server.load("car.png");
+        let tire: Handle<Image> = asset_server.load("tire.png");
+        spritesheets.car = car.clone();
+        spritesheets.tire = tire.clone();
+    });
+
 
     // Define game logic schedule
     let game_schedule_label = GGRSSchedule;
@@ -123,8 +142,8 @@ pub fn build_game(game: &mut App, config: GameConfig) {
     }
 
     // Construct game logic schedule
-    let game_schedule = game.get_schedule_mut(game_schedule_label)
-        .unwrap()
+    let game_schedule = game.get_schedule_mut(game_schedule_label).unwrap();
+    game_schedule
         .configure_sets(
             (
                 GameSet::Rollback,
@@ -148,7 +167,7 @@ pub fn build_game(game: &mut App, config: GameConfig) {
                 update_rollback_status,
                 // these three must actually come after we update rollback status
                 update_validatable_frame,
-                toggle_physics,
+                toggle_physics.run_if(in_state(GameReadiness::Ready)),
                 rollback_rapier_context,
                 // Make sure to flush everything before we apply our game logic.
                 apply_system_buffers,
@@ -220,8 +239,11 @@ pub fn build_game(game: &mut App, config: GameConfig) {
     game.add_startup_system(setup_graphics);
 }
 
-fn setup_graphics(mut commands: Commands) {
-    let bundle = Camera2dBundle::default();
+fn setup_graphics(config: Res<GameConfig>, mut commands: Commands) {
+    let bundle = Camera3dBundle {
+        transform: Transform::from_xyz(0.0, 0.0, config.meters2pix(40.0)).looking_at(Vec3::ZERO, Vec3::Y),
+        ..default()
+    };
     commands.spawn(bundle);
 }
 

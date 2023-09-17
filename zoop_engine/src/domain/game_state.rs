@@ -71,6 +71,28 @@ impl GameTire {
 
 #[derive(Clone, Debug, Default, Resource, Reflect, FromReflect)]
 #[reflect(Resource)]
+pub struct GameBuilding {
+    pub position: Vec3,
+    pub stories: u32,
+    pub half_size: f32,
+}
+impl GameBuilding {
+    pub fn of(
+        position: Vec3,
+        stories: u32,
+        half_size: f32
+    ) -> GameBuilding {
+        GameBuilding {
+            position,
+            stories,
+            half_size
+        }
+    }
+}
+
+
+#[derive(Clone, Debug, Default, Resource, Reflect, FromReflect)]
+#[reflect(Resource)]
 pub struct GameCar {
     pub tire_top_left: GameTire,
     pub tire_top_right: GameTire,
@@ -126,6 +148,7 @@ impl GameCar {
 pub enum GameEntity {
     Stub(),
     Car(GameCar),
+    Building(GameBuilding),
 }
 impl Default for GameEntity {
     fn default() -> Self {

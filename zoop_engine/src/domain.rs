@@ -14,3 +14,6 @@ pub mod rapier_rollback_state;
 pub mod room_config;
 pub mod spawn;
 pub mod tire;
+pub mod spritesheets;
+pub mod game_readiness;
+pub mod building;

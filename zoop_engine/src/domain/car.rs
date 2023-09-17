@@ -6,14 +6,20 @@ use crate::logic::math::*;
 use bevy::prelude::*;
 use bevy_ggrs::{Rollback, RollbackIdProvider};
 use bevy_rapier2d::prelude::*;
+use bevy_sprite3d::Sprite3dParams;
+use crate::domain::spritesheets::SpriteSheets;
 
 pub fn spawn_car(
+    spritesheets: &SpriteSheets,
+    sprite_params: &mut Sprite3dParams,
+    pixels_per_meter: f32,
     commands: &mut Commands,
     spawn_pool: &mut Vec<Entity>,
     rip: &mut RollbackIdProvider,
     player: Player,
     car_title: String,
     car_half_size: Vec2,
+    car_radius: f32,
     tire_half_size: Vec2,
     car_color: Color,
     tire_color: Color,
@@ -22,8 +28,12 @@ pub fn spawn_car(
 ) {
     let mut car = commands.entity(spawn_pool.pop().unwrap());
     car.insert(CarBody::build(
+        spritesheets,
+        sprite_params,
+        pixels_per_meter,
         car_title.clone(),
         car_half_size,
+        car_radius,
         player.clone(),
         car_color,
         car_physics.physics.clone(),
@@ -32,6 +42,9 @@ pub fn spawn_car(
 
     let car_id = car.id();
     spawn_tires(
+        spritesheets,
+        sprite_params,
+        pixels_per_meter,
         commands,
         spawn_pool,
         rip,
@@ -47,6 +60,9 @@ pub fn spawn_car(
 }
 
 fn spawn_tire(
+    spritesheets: &SpriteSheets,
+    sprite_params: &mut Sprite3dParams,
+    pixels_per_meter: f32,
     commands: &mut Commands,
     spawn_pool: &mut Vec<Entity>,
     rip: &mut RollbackIdProvider,
@@ -63,6 +79,9 @@ fn spawn_tire(
 ) {
     let mut tire = commands.entity(spawn_pool.pop().unwrap());
     tire.insert(Tire::build(
+        spritesheets,
+        sprite_params,
+        pixels_per_meter,
         player,
         is_front,
         is_right,
@@ -77,6 +96,9 @@ fn spawn_tire(
 }
 
 pub fn spawn_tires(
+    spritesheets: &SpriteSheets,
+    sprite_params: &mut Sprite3dParams,
+    pixels_per_meter: f32,
     commands: &mut Commands,
     spawn_pool: &mut Vec<Entity>,
     rip: &mut RollbackIdProvider,
@@ -90,6 +112,9 @@ pub fn spawn_tires(
     car_physics: GameCar,
 ) {
     spawn_tire(
+        spritesheets,
+        sprite_params,
+        pixels_per_meter,
         commands,
         spawn_pool,
         rip,
@@ -105,6 +130,9 @@ pub fn spawn_tires(
         car_physics.tire_top_right,
     );
     spawn_tire(
+        spritesheets,
+        sprite_params,
+        pixels_per_meter,
         commands,
         spawn_pool,
         rip,
@@ -120,6 +148,9 @@ pub fn spawn_tires(
         car_physics.tire_top_left,
     );
     spawn_tire(
+        spritesheets,
+        sprite_params,
+        pixels_per_meter,
         commands,
         spawn_pool,
         rip,
@@ -135,6 +166,9 @@ pub fn spawn_tires(
         car_physics.tire_bottom_right,
     );
     spawn_tire(
+        spritesheets,
+        sprite_params,
+        pixels_per_meter,
         commands,
         spawn_pool,
         rip,
@@ -158,8 +192,8 @@ pub fn tire_anchor(
     is_right: bool,
 ) -> FixedJointBuilder {
     let car_anchor = Vec2 {
-        x: signed(is_right, car_half_size.x + tire_half_size.x * 3.0),
-        y: signed(is_front, car_half_size.y - tire_half_size.y),
+        x: signed(is_right, car_half_size.x + tire_half_size.x * 0.5),
+        y: signed(is_front, car_half_size.y - tire_half_size.y * 2.3),
     };
     let tire_anchor = Vec2::new(0.0, 0.0);
 
@@ -176,8 +210,8 @@ pub fn tire_position(
     is_right: bool,
 ) -> Vec3 {
     Vec3 {
-        x: car_position.x + signed(is_right, car_half_size.x + tire_half_size.x * 3.0),
-        y: car_position.y + signed(is_front, car_half_size.y - tire_half_size.y),
+        x: car_position.x + signed(is_right, car_half_size.x + tire_half_size.x * 0.5),
+        y: car_position.y + signed(is_front, car_half_size.y - tire_half_size.y * 2.3),
         z: 0.0,
     }
 }

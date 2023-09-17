@@ -19,6 +19,7 @@ pub struct GameConfig {
     pub pixels_per_meter: f32,
     pub car_half_width: f32,
     pub car_half_length: f32,
+    pub car_radius: f32,
     pub tire_half_thickness: f32,
     pub tire_radius: f32,
     pub tire_rotation_per_tick: f32,
@@ -38,6 +39,9 @@ impl GameConfig {
     fn _meters2pix(pixels_per_meter: f32, meters: f32) -> f32 {
         pixels_per_meter * meters
     }
+    pub fn meters2pix(&self, meters: f32) -> f32 {
+        self.pixels_per_meter * meters
+    }
 
     pub fn default(
         network: Option<RoomConfig>,
@@ -53,8 +57,9 @@ impl GameConfig {
             load_seconds: 1,
             canvas_selector,
             pixels_per_meter: ppm,
-            car_half_width: m2p(1.0),
-            car_half_length: m2p(2.0),
+            car_half_width: m2p(0.65),
+            car_half_length: m2p(1.8),
+            car_radius: 0.15,
             tire_half_thickness: m2p(0.2),
             tire_radius: m2p(0.4),
             tire_rotation_per_tick: deg2rad(15.0),
