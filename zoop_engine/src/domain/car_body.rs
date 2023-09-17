@@ -10,6 +10,9 @@ use crate::logic::math::deg2rad;
 #[derive(Component)]
 pub struct CarMeta {
     pub half_size: Vec2,
+    pub position_old: Vec3,
+    pub position_older: Vec3,
+    pub velocity_smooth: f32,
 }
 
 #[derive(Bundle)]
@@ -47,8 +50,14 @@ impl CarBody {
         color: Color,
         physics: EntityPhysics,
     ) -> CarBody {
+        let position = physics.transform.translation;
         CarBody {
-            meta: CarMeta { half_size },
+            meta: CarMeta {
+                half_size,
+                position_old: position,
+                position_older: position,
+                velocity_smooth: 0.0
+            },
             rigid_body: RigidBody::Dynamic,
             name: Name::new(car_title),
             rigid_mass: physics.mass,

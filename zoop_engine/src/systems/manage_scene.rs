@@ -28,7 +28,7 @@ pub fn init_scene(config: &GameConfig) -> GameState {
             let position = Vec3 {
                 x: config.car_half_size().x * 6.0 * (handle as f32),
                 y: 0.0,
-                z: 0.01,
+                z: config.meters2pix(0.1),
             };
             let tire_half_size = config.tire_half_size();
             let car_half_size = config.car_half_size();

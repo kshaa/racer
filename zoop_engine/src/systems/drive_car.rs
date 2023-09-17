@@ -16,12 +16,29 @@ use bevy_rapier2d::prelude::*;
 use ggrs::InputStatus;
 use crate::domain::controls::Controls;
 
+pub fn store_car_positions(
+    mut source_car_query: Query<(&mut CarMeta, &Transform, &Player), Without<TireMeta>>,
+) {
+    let mut car_query = source_car_query.iter_mut().collect::<Vec<_>>();
+    car_query.sort_by_key(|(_, _, player)| player.handle);
+
+    for (mut car_meta, car_transform, _) in car_query {
+        car_meta.position_older = car_meta.position_old;
+        car_meta.position_old = car_transform.translation;
+        let velocity = car_meta.position_old.distance(car_meta.position_older);
+        let delta = velocity - car_meta.velocity_smooth;
+        let coefficient = 0.1;
+        let smoothed = (car_meta.velocity_smooth + delta * coefficient).abs();
+        car_meta.velocity_smooth = smoothed;
+    }
+}
+
 pub fn drive_car(
     config: Res<GameConfig>,
     inputs: Option<Res<PlayerInputs<GGRSConfig>>>,
     fallback_inputs: Res<Input<KeyCode>>,
     mut hashes: ResMut<RxFrameHashes>,
-    mut source_car_query: Query<(&CarMeta, &Transform, &Player), Without<TireMeta>>,
+    mut source_car_query: Query<(&Transform, &Player), Without<TireMeta>>,
     mut source_tire_query: Query<
         (
             &mut TirePhysics,
@@ -38,7 +55,7 @@ pub fn drive_car(
 ) {
     // Sort queries for more determinism
     let mut car_query = source_car_query.iter_mut().collect::<Vec<_>>();
-    car_query.sort_by_key(|(_, _, player)| player.handle);
+    car_query.sort_by_key(|(_, player)| player.handle);
 
     let mut tire_query = source_tire_query.iter_mut().collect::<Vec<_>>();
     tire_query.sort_by_key(|(_, meta, _, _, _, _, player)| {
@@ -51,7 +68,7 @@ pub fn drive_car(
 
     #[cfg(feature = "debug_lines")]
     {
-        for (_, car_transform, _) in &car_query {
+        for (car_transform, _) in &car_query {
             let (_, _, car_rotation) = car_transform.rotation.to_euler(EulerRot::XYZ);
             let car_direction = Vec2::from_angle(car_rotation);
             let car_direction3 = Vec3 {
@@ -136,9 +153,9 @@ pub fn drive_car(
             );
 
         // Apply tire angle to tire rotation transform
-        let (_, car_transform, _) = car_query
+        let (car_transform, _) = car_query
             .iter()
-            .find(|(_, _, car_player)| car_player.handle == tire_player.handle)
+            .find(|(_, car_player)| car_player.handle == tire_player.handle)
             .unwrap();
         let (_, _, car_rotation) = car_transform.rotation.to_euler(EulerRot::XYZ);
         let tire_rotation = car_rotation + tire_physics.angle;

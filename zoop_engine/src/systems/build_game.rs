@@ -9,6 +9,8 @@ use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use bevy_prototype_debug_lines::*;
 use bevy_rapier2d::prelude::*;
 use bevy_sprite3d::{Sprite3d, Sprite3dParams, Sprite3dPlugin};
+use smooth_bevy_cameras::{LookTransform, LookTransformBundle, LookTransformPlugin, Smoother};
+use crate::domain::car_body::CarMeta;
 
 use crate::domain::colors::*;
 use crate::domain::desync::*;
@@ -16,8 +18,10 @@ use crate::domain::frames::*;
 use crate::domain::game_config::GameConfig;
 use crate::domain::game_readiness::GameReadiness;
 use crate::domain::game_set::GameSet;
+use crate::domain::player::Player;
 use crate::domain::spawn::*;
 use crate::domain::spritesheets::SpriteSheets;
+use crate::domain::tire::TireMeta;
 use crate::systems::build_network::*;
 use crate::systems::drive_car::*;
 use crate::systems::manage_scene::*;
@@ -54,6 +58,10 @@ pub fn build_game(game: &mut App, config: GameConfig) {
         }),
         ..default()
     }));
+
+    // For following camera
+    game.add_plugin(LookTransformPlugin);
+    game.add_system(move_camera_system);
 
     // Physics plugin
     game.insert_resource(config.rapier_config());
@@ -181,6 +189,7 @@ pub fn build_game(game: &mut App, config: GameConfig) {
             (
                 // destroy_scene,
                 // setup_scene,
+                store_car_positions.before(drive_car),
                 drive_car,
                 // The `frame_validator` relies on the execution of `apply_inputs` and must come after.
                 // It could happen anywhere else, I just stuck it here to be clear.
@@ -195,7 +204,10 @@ pub fn build_game(game: &mut App, config: GameConfig) {
         );
     } else {
         game_schedule.add_systems(
-            (drive_car,).chain().in_base_set(GameSet::Game));
+        (
+                store_car_positions.before(drive_car),
+                drive_car
+            ).chain().in_base_set(GameSet::Game));
     }
 
 
@@ -240,11 +252,40 @@ pub fn build_game(game: &mut App, config: GameConfig) {
 }
 
 fn setup_graphics(config: Res<GameConfig>, mut commands: Commands) {
-    let bundle = Camera3dBundle {
-        transform: Transform::from_xyz(0.0, 0.0, config.meters2pix(40.0)).looking_at(Vec3::ZERO, Vec3::Y),
-        ..default()
-    };
-    commands.spawn(bundle);
+    let eye = Vec3 { x: 0.0, y: 0.0, z: config.default_camera_height };
+    let target = Vec3::ZERO;
+    let up = Vec3::Y;
+
+    commands
+        .spawn(LookTransformBundle {
+            transform: LookTransform::new(eye, target, up),
+            smoother: Smoother::new(0.8), // Value between 0.0 and 1.0, higher is smoother.
+        })
+        .insert(Camera3dBundle {
+            transform: Transform::from_translation(eye).looking_at(target, up),
+            ..default()
+        });
+}
+
+fn move_camera_system(
+    config: Res<GameConfig>,
+    mut cameras: Query<&mut LookTransform>,
+    source_car_query: Query<(&CarMeta, &Transform, &Player), Without<TireMeta>>,
+) {
+    let following_car_index = 0;
+    let (position, velocity) =
+        source_car_query.into_iter()
+            .find(|(_, _, p)| p.handle == following_car_index)
+            .map(|(m, t, _)| (t.translation, m.velocity_smooth))
+            .unwrap_or((Vec3::ZERO, 0.0));
+
+    // Later, another system will update the `Transform` and apply smoothing automatically.
+    for mut c in cameras.iter_mut() {
+        c.eye.x = position.x;
+        c.eye.y = position.y;
+        c.eye.z = config.default_camera_height + velocity * 70.0;
+        c.target = position;
+    }
 }
 
 fn rapier_stub() {}
