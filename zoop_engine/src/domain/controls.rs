@@ -8,7 +8,6 @@ const INPUT_BREAK: u16 = 1 << 2;
 const INPUT_STEER_RIGHT: u16 = 1 << 3;
 const INPUT_STEER_LEFT: u16 = 1 << 4;
 const INPUT_PARK: u16 = 1 << 5;
-const INPUT_DRIFT: u16 = 1 << 6;
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Pod, Zeroable)]
@@ -37,9 +36,6 @@ impl Controls {
     pub fn parking(&self) -> bool {
         (self.input & INPUT_PARK) != 0
     }
-    pub fn drifting(&self) -> bool {
-        (self.input & INPUT_DRIFT) != 0
-    }
 
     pub fn steering_any(&self) -> bool {
         self.steering_right() || self.steering_left()
@@ -53,7 +49,6 @@ impl Controls {
         steer_right: KeyCode,
         steer_left: KeyCode,
         park: KeyCode,
-        drift: KeyCode,
         last_confirmed_hash: u16,
         last_confirmed_frame: Frame,
     ) -> Controls {
@@ -76,9 +71,6 @@ impl Controls {
         }
         if input.pressed(park) {
             serialized |= INPUT_PARK
-        }
-        if input.pressed(drift) {
-            serialized |= INPUT_DRIFT
         }
 
         Controls {
@@ -109,7 +101,6 @@ impl Controls {
             KeyCode::D,
             KeyCode::A,
             KeyCode::V,
-            KeyCode::F,
             last_confirmed_hash,
             last_confirmed_frame,
         )
@@ -128,7 +119,6 @@ impl Controls {
             KeyCode::L,
             KeyCode::J,
             KeyCode::B,
-            KeyCode::H,
             last_confirmed_hash,
             last_confirmed_frame,
         )

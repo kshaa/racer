@@ -89,7 +89,7 @@ pub fn tire_acceleration(
 }
 
 pub fn tire_friction_impulse(
-    controls: &Controls,
+    is_drifting: bool,
     drift_leftover: f32,
     tire_friction_force: f32,
     tire_direction: &Vec2,
@@ -101,7 +101,7 @@ pub fn tire_friction_impulse(
     } else {
         velocity_angle_unsafe
     };
-    let friction_force = if controls.drifting() {
+    let friction_force = if is_drifting {
         0.0
     } else if drift_leftover != 0.0 {
         tire_friction_force * (1.0 - drift_leftover)

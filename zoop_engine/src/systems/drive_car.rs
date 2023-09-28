@@ -129,7 +129,8 @@ pub fn drive_car(
         let direction_velocity = velocity.linvel.dot(tire_direction);
 
         // Apply drift leftover
-        if controls.drifting() {
+        let is_drifting = velocity.linvel.length() > config.drift_velocity;
+        if is_drifting {
             tire_physics.drift_leftover = 1.0;
         } else if tire_physics.drift_leftover != 0.0 {
             tire_physics.drift_leftover =
@@ -168,7 +169,7 @@ pub fn drive_car(
 
         // Apply friction
         let friction_impulse = tire_friction_impulse(
-            &controls,
+            is_drifting,
             tire_physics.drift_leftover,
             config.tire_friction_force,
             &tire_direction,
