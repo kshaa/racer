@@ -1,5 +1,5 @@
 use crate::domain::car_body::CarMeta;
-use bevy::asset::LoadState;
+
 use bevy::ecs::schedule::{LogLevel, ScheduleBuildSettings};
 use bevy::prelude::CoreSet::*;
 use bevy::prelude::*;
@@ -9,7 +9,7 @@ use bevy_inspector_egui::quick::WorldInspectorPlugin;
 #[cfg(feature = "debug_lines")]
 use bevy_prototype_debug_lines::*;
 use bevy_rapier2d::prelude::*;
-use bevy_sprite3d::{Sprite3d, Sprite3dParams, Sprite3dPlugin};
+use bevy_sprite3d::{Sprite3dPlugin};
 use smooth_bevy_cameras::{LookTransform, LookTransformBundle, LookTransformPlugin, Smoother};
 
 use crate::domain::colors::*;

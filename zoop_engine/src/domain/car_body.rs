@@ -1,7 +1,7 @@
 use crate::domain::game_state::*;
 use crate::domain::player::Player;
 use crate::domain::spritesheets::SpriteSheets;
-use crate::logic::math::deg2rad;
+
 use bevy::core::Name;
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
@@ -47,7 +47,7 @@ impl CarBody {
         half_size: Vec2,
         radius: f32,
         player: Player,
-        color: Color,
+        _color: Color,
         physics: EntityPhysics,
     ) -> CarBody {
         let position = physics.transform.translation;

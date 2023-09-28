@@ -1,6 +1,6 @@
 use crate::domain::car::spawn_car;
 use bevy::asset::LoadState;
-use std::ops::Mul;
+
 
 use crate::domain::colors::{ZOOP_BLACK, ZOOP_RED, ZOOP_YELLOW};
 use crate::domain::game_config::GameConfig;
@@ -211,7 +211,7 @@ pub fn spawn_scene(
 
 pub fn setup_building(
     spritesheets: &SpriteSheets,
-    config: &GameConfig,
+    _config: &GameConfig,
     building: GameBuilding,
     commands: &mut Commands,
     spawn_pool: &mut Vec<Entity>,

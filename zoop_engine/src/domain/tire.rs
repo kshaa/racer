@@ -64,7 +64,7 @@ impl Tire {
         is_right: bool,
         half_size: Vec2,
         car_title: String,
-        color: Color,
+        _color: Color,
         damping: Damping,
         physics: GameTire,
     ) -> Tire {

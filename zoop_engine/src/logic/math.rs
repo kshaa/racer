@@ -39,7 +39,7 @@ mod tests {
             y: 1.0,
             z: 0.0,
         };
-        let mut t1 = Transform::from_translation(p1);
+        let t1 = Transform::from_translation(p1);
         let mut t2 = t1.clone();
         t2.rotate_local_z(deg2rad(90.0));
         let r = t1.rotation.angle_between(t2.rotation);

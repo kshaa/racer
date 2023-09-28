@@ -1,6 +1,5 @@
 use crate::domain::error::*;
 use crate::domain::users::{User, Users};
-use actix::*;
 use actix_web::web;
 use actix_web::web::Data;
 use actix_web::{post, Result};

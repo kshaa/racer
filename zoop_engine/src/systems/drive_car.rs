@@ -76,7 +76,7 @@ pub fn drive_car(
         tire_player,
     ) in tire_query
     {
-        let (game_input, input_status) = if config.network.is_some() {
+        let (game_input, _input_status) = if config.network.is_some() {
             inputs.as_ref().unwrap()[tire_player.handle]
         } else {
             (
