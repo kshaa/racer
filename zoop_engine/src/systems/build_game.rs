@@ -1,7 +1,8 @@
+use crate::domain::car_body::CarMeta;
 use bevy::asset::LoadState;
 use bevy::ecs::schedule::{LogLevel, ScheduleBuildSettings};
-use bevy::prelude::*;
 use bevy::prelude::CoreSet::*;
+use bevy::prelude::*;
 use bevy_ggrs::*;
 #[cfg(feature = "world_debug")]
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
@@ -10,7 +11,6 @@ use bevy_prototype_debug_lines::*;
 use bevy_rapier2d::prelude::*;
 use bevy_sprite3d::{Sprite3d, Sprite3dParams, Sprite3dPlugin};
 use smooth_bevy_cameras::{LookTransform, LookTransformBundle, LookTransformPlugin, Smoother};
-use crate::domain::car_body::CarMeta;
 
 use crate::domain::colors::*;
 use crate::domain::desync::*;
@@ -118,13 +118,14 @@ pub fn build_game(game: &mut App, config: GameConfig) {
 
     // Define loading logic
     game.insert_resource(SpriteSheets::default());
-    game.add_startup_system(|asset_server: Res<AssetServer>, mut spritesheets: ResMut<SpriteSheets>| {
-        let car: Handle<Image> = asset_server.load("car.png");
-        let tire: Handle<Image> = asset_server.load("tire.png");
-        spritesheets.car = car.clone();
-        spritesheets.tire = tire.clone();
-    });
-
+    game.add_startup_system(
+        |asset_server: Res<AssetServer>, mut spritesheets: ResMut<SpriteSheets>| {
+            let car: Handle<Image> = asset_server.load("car.png");
+            let tire: Handle<Image> = asset_server.load("tire.png");
+            spritesheets.car = car.clone();
+            spritesheets.tire = tire.clone();
+        },
+    );
 
     // Define game logic schedule
     let game_schedule_label = GGRSSchedule;
@@ -200,18 +201,18 @@ pub fn build_game(game: &mut App, config: GameConfig) {
                 apply_system_buffers,
             )
                 .chain()
-                .in_base_set(GameSet::Game)
+                .in_base_set(GameSet::Game),
         );
     } else {
         game_schedule.add_systems(
-        (
-                store_car_positions.before(drive_car),
-                drive_car
-            ).chain().in_base_set(GameSet::Game));
+            (store_car_positions.before(drive_car), drive_car)
+                .chain()
+                .in_base_set(GameSet::Game),
+        );
     }
 
-
-    game_schedule.add_systems(
+    game_schedule
+        .add_systems(
             RapierPhysicsPlugin::<NoUserData>::get_systems(PhysicsSet::SyncBackend)
                 .in_base_set(PhysicsSet::SyncBackend),
         )
@@ -252,7 +253,11 @@ pub fn build_game(game: &mut App, config: GameConfig) {
 }
 
 fn setup_graphics(config: Res<GameConfig>, mut commands: Commands) {
-    let eye = Vec3 { x: 0.0, y: 0.0, z: config.default_camera_height };
+    let eye = Vec3 {
+        x: 0.0,
+        y: 0.0,
+        z: config.default_camera_height,
+    };
     let target = Vec3::ZERO;
     let up = Vec3::Y;
 
@@ -273,11 +278,11 @@ fn move_camera_system(
     source_car_query: Query<(&CarMeta, &Transform, &Player), Without<TireMeta>>,
 ) {
     let following_car_index = 0;
-    let (position, velocity) =
-        source_car_query.into_iter()
-            .find(|(_, _, p)| p.handle == following_car_index)
-            .map(|(m, t, _)| (t.translation, m.velocity_smooth))
-            .unwrap_or((Vec3::ZERO, 0.0));
+    let (position, velocity) = source_car_query
+        .into_iter()
+        .find(|(_, _, p)| p.handle == following_car_index)
+        .map(|(m, t, _)| (t.translation, m.velocity_smooth))
+        .unwrap_or((Vec3::ZERO, 0.0));
 
     // Later, another system will update the `Transform` and apply smoothing automatically.
     for mut c in cameras.iter_mut() {

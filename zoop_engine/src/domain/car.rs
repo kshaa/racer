@@ -1,13 +1,13 @@
 use crate::domain::car_body::*;
 use crate::domain::game_state::*;
 use crate::domain::player::Player;
+use crate::domain::spritesheets::SpriteSheets;
 use crate::domain::tire::Tire;
 use crate::logic::math::*;
 use bevy::prelude::*;
 use bevy_ggrs::{Rollback, RollbackIdProvider};
 use bevy_rapier2d::prelude::*;
 use bevy_sprite3d::Sprite3dParams;
-use crate::domain::spritesheets::SpriteSheets;
 
 pub fn spawn_car(
     spritesheets: &SpriteSheets,
@@ -68,7 +68,7 @@ fn spawn_tire(
     rip: &mut RollbackIdProvider,
     player: Player,
     car: Entity,
-    car_anchor: FixedJointBuilder,
+    car_anchor: impl Into<GenericJoint>,
     tire_half_size: Vec2,
     is_front: bool,
     is_right: bool,
@@ -190,14 +190,14 @@ pub fn tire_anchor(
     tire_half_size: Vec2,
     is_front: bool,
     is_right: bool,
-) -> FixedJointBuilder {
+) -> impl Into<GenericJoint> {
     let car_anchor = Vec2 {
         x: signed(is_right, car_half_size.x + tire_half_size.x * 0.5),
         y: signed(is_front, car_half_size.y - tire_half_size.y * 2.3),
     };
     let tire_anchor = Vec2::new(0.0, 0.0);
 
-    FixedJointBuilder::new()
+    RevoluteJointBuilder::new()
         .local_anchor1(car_anchor)
         .local_anchor2(tire_anchor)
 }

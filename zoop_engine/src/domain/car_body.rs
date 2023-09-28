@@ -1,11 +1,11 @@
 use crate::domain::game_state::*;
 use crate::domain::player::Player;
+use crate::domain::spritesheets::SpriteSheets;
+use crate::logic::math::deg2rad;
 use bevy::core::Name;
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 use bevy_sprite3d::*;
-use crate::domain::spritesheets::SpriteSheets;
-use crate::logic::math::deg2rad;
 
 #[derive(Component)]
 pub struct CarMeta {
@@ -56,7 +56,7 @@ impl CarBody {
                 half_size,
                 position_old: position,
                 position_older: position,
-                velocity_smooth: 0.0
+                velocity_smooth: 0.0,
             },
             rigid_body: RigidBody::Dynamic,
             name: Name::new(car_title),
@@ -79,9 +79,12 @@ impl CarBody {
                 pixels_per_metre: 250.0 / pixels_per_meter,
                 partial_alpha: true,
                 unlit: true,
-                transform: physics.transform,
+                transform: physics
+                    .transform
+                    .with_translation(position + Vec3::new(0.0, 0.0, 1.0)),
                 ..default()
-            }.bundle(sprite_params),
+            }
+            .bundle(sprite_params),
             player,
         }
     }

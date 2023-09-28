@@ -8,30 +8,43 @@ pub fn tire_angle_change(
     tire_meta: &TireMeta,
     tire_physics: &TirePhysics,
     controls: &Controls,
+    min_steering_angle: f32,
     max_steering_angle: f32,
     rotation_step: f32,
+    tire_rotation_velocity_reduction_coefficient: f32,
+    tire_rotation_step_reduction_coefficient: f32,
+    tire_velocity: f32,
 ) -> f32 {
+    let velocity_reduced_max_angle = min_steering_angle
+        .max(max_steering_angle - tire_velocity * tire_rotation_velocity_reduction_coefficient);
+
+    let velocity_reduced_rotation_step =
+        (rotation_step * tire_velocity.abs() * tire_rotation_step_reduction_coefficient)
+            .min(rotation_step);
+
     if !tire_meta.is_front {
         // Back wheels don't steer
         0.0
     } else {
-        if controls.steering_left() && tire_physics.angle < max_steering_angle {
+        if controls.steering_left() && tire_physics.angle < velocity_reduced_max_angle {
             // Steering left
-            rotation_step
-        } else if controls.steering_right() && tire_physics.angle > -max_steering_angle {
+            velocity_reduced_rotation_step
+        } else if controls.steering_right() && tire_physics.angle > -velocity_reduced_max_angle {
             // Steering right
-            -rotation_step
+            -velocity_reduced_rotation_step
         } else if !controls.steering_any() {
             // Steering back to center
-            if tire_physics.angle < rotation_step && tire_physics.angle > -rotation_step {
+            if tire_physics.angle < velocity_reduced_rotation_step
+                && tire_physics.angle > -velocity_reduced_rotation_step
+            {
                 // Already at center
                 0.0
-            } else if tire_physics.angle <= -rotation_step {
+            } else if tire_physics.angle <= -velocity_reduced_rotation_step {
                 // Steering from left
-                rotation_step
+                velocity_reduced_rotation_step
             } else {
                 // Steering from right
-                -rotation_step
+                -velocity_reduced_rotation_step
             }
         } else {
             // Steering over treshold - keeping same angle
@@ -48,7 +61,13 @@ pub fn tire_acceleration(
     acceleration_force: f32,
     reversing_force: f32,
     breaking_force: f32,
+    parking_multiplier: f32,
 ) -> f32 {
+    let controlled_parking_multiplier = if controls.parking() {
+        parking_multiplier
+    } else {
+        1.0
+    };
     if !tire_meta.is_front {
         // Only front wheels accelerate currently
         0.0
@@ -58,10 +77,10 @@ pub fn tire_acceleration(
             signed(direction_velocity < 0.0, breaking_force)
         } else if controls.reversing() {
             // Backwards acceleration
-            -reversing_force
+            -reversing_force * controlled_parking_multiplier
         } else if controls.accelerating() {
             // Forwards acceleration
-            acceleration_force
+            acceleration_force * controlled_parking_multiplier
         } else {
             // No acceleration
             0.0
@@ -70,6 +89,8 @@ pub fn tire_acceleration(
 }
 
 pub fn tire_friction_impulse(
+    controls: &Controls,
+    drift_leftover: f32,
     tire_friction_force: f32,
     tire_direction: &Vec2,
     tire_velocity: &Vec2,
@@ -80,8 +101,15 @@ pub fn tire_friction_impulse(
     } else {
         velocity_angle_unsafe
     };
+    let friction_force = if controls.drifting() {
+        0.0
+    } else if drift_leftover != 0.0 {
+        tire_friction_force * (1.0 - drift_leftover)
+    } else {
+        tire_friction_force
+    };
     let slide_amount =
-        ComplexField::sin(velocity_angle).abs() * tire_velocity.length() * tire_friction_force;
+        ComplexField::sin(velocity_angle).abs() * tire_velocity.length() * friction_force;
     let slide_direction = if velocity_angle < 0.0 {
         deg2rad(90.0)
     } else {

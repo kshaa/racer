@@ -23,17 +23,24 @@ pub struct GameConfig {
     pub car_radius: f32,
     pub tire_half_thickness: f32,
     pub tire_radius: f32,
+    pub tire_rotation_velocity_reduction_coefficient: f32,
+    pub tire_rotation_step_reduction_coefficient: f32,
     pub tire_rotation_per_tick: f32,
+    pub tire_min_angle: f32,
     pub tire_max_angle: f32,
+    pub parking_force: f32,
     pub tire_acceleration_force: f32,
     pub tire_reversing_force: f32,
     pub tire_breaking_force: f32,
     pub tire_friction_force: f32,
     pub tire_linear_damping: f32,
     pub tire_angular_damping: f32,
+    pub drift_loss_per_tick: f32,
+    pub camera_velocity_coefficient: f32,
     pub desync_max_frames: u16,
 }
 
+const FPS: u16 = 60;
 pub const DESYNC_MAX_FRAMES: u16 = 30;
 
 impl GameConfig {
@@ -54,7 +61,7 @@ impl GameConfig {
         GameConfig {
             network,
             players,
-            fps: 60,
+            fps: FPS,
             load_seconds: 1,
             canvas_selector,
             pixels_per_meter: ppm,
@@ -64,28 +71,36 @@ impl GameConfig {
             car_radius: 0.15,
             tire_half_thickness: m2p(0.2),
             tire_radius: m2p(0.4),
-            tire_rotation_per_tick: deg2rad(15.0),
+            tire_rotation_velocity_reduction_coefficient: 0.01,
+            tire_rotation_step_reduction_coefficient: 0.5,
+            tire_rotation_per_tick: deg2rad(1.0),
+            tire_min_angle: deg2rad(15.0),
             tire_max_angle: deg2rad(35.0),
-            tire_acceleration_force: m2p(140.0),
-            tire_reversing_force: m2p(100.0),
-            tire_breaking_force: m2p(300.0),
-            tire_friction_force: 0.5,
+            parking_force: 0.1,
+            tire_acceleration_force: m2p(40.0),
+            tire_reversing_force: m2p(30.0),
+            tire_breaking_force: m2p(30.0),
+            tire_friction_force: 0.9,
             tire_linear_damping: 5.0,
             tire_angular_damping: 0.1,
+            drift_loss_per_tick: 0.05 * (1.0 / (FPS as f32)),
+            camera_velocity_coefficient: 0.01,
             desync_max_frames: DESYNC_MAX_FRAMES,
         }
     }
 
     pub fn game_room_address(&self) -> Option<Result<Url, ParseError>> {
-        self.network.clone().map(|network| network.server_address.join(
-            format!(
-                "/api/game/connect/{}/as/{}/ticket/{}",
-                network.room.0.to_string(),
-                network.user_id.0.to_string(),
-                network.user_ticket
+        self.network.clone().map(|network| {
+            network.server_address.join(
+                format!(
+                    "/api/game/connect/{}/as/{}/ticket/{}",
+                    network.room.0.to_string(),
+                    network.user_id.0.to_string(),
+                    network.user_ticket
+                )
+                .as_str(),
             )
-            .as_str(),
-        ))
+        })
     }
 
     pub fn tire_damping(&self) -> Damping {

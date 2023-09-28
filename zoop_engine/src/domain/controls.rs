@@ -7,6 +7,8 @@ const INPUT_REVERSE: u16 = 1 << 1;
 const INPUT_BREAK: u16 = 1 << 2;
 const INPUT_STEER_RIGHT: u16 = 1 << 3;
 const INPUT_STEER_LEFT: u16 = 1 << 4;
+const INPUT_PARK: u16 = 1 << 5;
+const INPUT_DRIFT: u16 = 1 << 6;
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Pod, Zeroable)]
@@ -32,6 +34,12 @@ impl Controls {
     pub fn steering_left(&self) -> bool {
         (self.input & INPUT_STEER_LEFT) != 0
     }
+    pub fn parking(&self) -> bool {
+        (self.input & INPUT_PARK) != 0
+    }
+    pub fn drifting(&self) -> bool {
+        (self.input & INPUT_DRIFT) != 0
+    }
 
     pub fn steering_any(&self) -> bool {
         self.steering_right() || self.steering_left()
@@ -44,6 +52,8 @@ impl Controls {
         breaker: KeyCode,
         steer_right: KeyCode,
         steer_left: KeyCode,
+        park: KeyCode,
+        drift: KeyCode,
         last_confirmed_hash: u16,
         last_confirmed_frame: Frame,
     ) -> Controls {
@@ -63,6 +73,12 @@ impl Controls {
         }
         if input.pressed(steer_left) {
             serialized |= INPUT_STEER_LEFT
+        }
+        if input.pressed(park) {
+            serialized |= INPUT_PARK
+        }
+        if input.pressed(drift) {
+            serialized |= INPUT_DRIFT
         }
 
         Controls {
@@ -92,6 +108,8 @@ impl Controls {
             KeyCode::C,
             KeyCode::D,
             KeyCode::A,
+            KeyCode::V,
+            KeyCode::F,
             last_confirmed_hash,
             last_confirmed_frame,
         )
@@ -109,6 +127,8 @@ impl Controls {
             KeyCode::N,
             KeyCode::L,
             KeyCode::J,
+            KeyCode::B,
+            KeyCode::H,
             last_confirmed_hash,
             last_confirmed_frame,
         )
@@ -117,7 +137,10 @@ impl Controls {
     pub fn for_nth_player(input: &Input<KeyCode>, n: usize) -> Controls {
         let hash: u16 = 0;
         let frame: Frame = 0;
-        if n == 0 { Controls::from_wasd(input, hash, frame) }
-        else { Controls::from_ijkl(input, hash, frame) }
+        if n == 0 {
+            Controls::from_wasd(input, hash, frame)
+        } else {
+            Controls::from_ijkl(input, hash, frame)
+        }
     }
 }

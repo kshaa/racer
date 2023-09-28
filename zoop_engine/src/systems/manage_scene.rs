@@ -1,6 +1,6 @@
-use std::ops::Mul;
-use bevy::asset::LoadState;
 use crate::domain::car::spawn_car;
+use bevy::asset::LoadState;
+use std::ops::Mul;
 
 use crate::domain::colors::{ZOOP_BLACK, ZOOP_RED, ZOOP_YELLOW};
 use crate::domain::game_config::GameConfig;
@@ -8,14 +8,14 @@ use crate::domain::game_state::{GameBuilding, GameCar, GameEntity, GameState};
 use crate::domain::player::Player;
 use crate::domain::spawn::DeterministicSpawn;
 
+use crate::domain::building::Building;
+use crate::domain::game_readiness::GameReadiness;
+use crate::domain::spritesheets::SpriteSheets;
 use bevy::prelude::*;
 use bevy::render::render_resource::{Extent3d, TextureDimension, TextureFormat};
 use bevy_ggrs::{Rollback, RollbackIdProvider};
 use bevy_rapier2d::prelude::*;
 use bevy_sprite3d::Sprite3dParams;
-use crate::domain::building::Building;
-use crate::domain::game_readiness::GameReadiness;
-use crate::domain::spritesheets::SpriteSheets;
 
 pub fn init_scene(config: &GameConfig) -> GameState {
     println!("Initiating scene state");
@@ -28,7 +28,7 @@ pub fn init_scene(config: &GameConfig) -> GameState {
             let position = Vec3 {
                 x: config.car_half_size().x * 6.0 * (handle as f32),
                 y: 0.0,
-                z: config.meters2pix(0.1),
+                z: 0.0,
             };
             let tire_half_size = config.tire_half_size();
             let car_half_size = config.car_half_size();
@@ -44,13 +44,17 @@ pub fn init_scene(config: &GameConfig) -> GameState {
 
     let building_half_size = config.meters2pix(5.0);
     let building = GameEntity::Building(GameBuilding::of(
-        Vec3 { x: -building_half_size * 1.5, y: 0.0, z: building_half_size * 0.5},
+        Vec3 {
+            x: -building_half_size * 1.5,
+            y: 0.0,
+            z: building_half_size,
+        },
         1,
-        building_half_size
+        building_half_size,
     ));
-    let mut buildings = vec!(building);
+    let mut buildings = vec![building];
 
-    let mut entities = vec!();
+    let mut entities = vec![];
     entities.append(&mut cars);
     entities.append(&mut buildings);
 
@@ -83,7 +87,7 @@ pub fn init_materials(
     mut spritesheets: ResMut<SpriteSheets>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut images: ResMut<Assets<Image>>,
-    mut materials: ResMut<Assets<StandardMaterial>>
+    mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     let debug_material = materials.add(StandardMaterial {
         base_color_texture: Some(images.add(uv_debug_texture())),
@@ -132,11 +136,15 @@ pub fn setup_scene(
     state: Res<GameState>,
     mut rip: ResMut<RollbackIdProvider>,
     spawn_pool: Query<(Entity, &DeterministicSpawn)>,
-    mut commands: Commands
+    mut commands: Commands,
 ) {
     // Check assets loaded
-    if asset_server.get_load_state(&spritesheets.car) != LoadState::Loaded { return; }
-    if asset_server.get_load_state(&spritesheets.tire) != LoadState::Loaded { return; }
+    if asset_server.get_load_state(&spritesheets.car) != LoadState::Loaded {
+        return;
+    }
+    if asset_server.get_load_state(&spritesheets.tire) != LoadState::Loaded {
+        return;
+    }
 
     // Visual loading state logic
     next_state.set(GameReadiness::Ready);
@@ -155,7 +163,7 @@ pub fn setup_scene(
         &state,
         &mut commands,
         &mut sorted_entity_pool,
-        &mut rip
+        &mut rip,
     );
 }
 
@@ -166,7 +174,7 @@ pub fn spawn_scene(
     state: &GameState,
     commands: &mut Commands,
     spawn_pool: &mut Vec<Entity>,
-    rip: &mut RollbackIdProvider
+    rip: &mut RollbackIdProvider,
 ) {
     println!("Spawning scene from state");
     for entity in state.entities.iter() {
@@ -174,14 +182,26 @@ pub fn spawn_scene(
             GameEntity::Stub() => (),
             GameEntity::Car(car) => {
                 println!("Spawning car for player {}", car.player.handle);
-                setup_car(spritesheets, sprite_params, config, car.clone(), commands, spawn_pool, rip)
-            },
-            GameEntity::Building(building) => {
-                setup_building(spritesheets, config, building.clone(), commands, spawn_pool, rip)
+                setup_car(
+                    spritesheets,
+                    sprite_params,
+                    config,
+                    car.clone(),
+                    commands,
+                    spawn_pool,
+                    rip,
+                )
             }
+            GameEntity::Building(building) => setup_building(
+                spritesheets,
+                config,
+                building.clone(),
+                commands,
+                spawn_pool,
+                rip,
+            ),
         }
     }
-
 
     while !spawn_pool.is_empty() {
         let mut leftover = commands.entity(spawn_pool.pop().unwrap());

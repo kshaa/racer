@@ -57,7 +57,10 @@ impl GameTire {
         angle: f32,
     ) -> GameTire {
         GameTire {
-            tire_physics: TirePhysics { angle },
+            tire_physics: TirePhysics {
+                angle,
+                drift_leftover: 0.0,
+            },
             entity_physics: EntityPhysics::of(transform, velocity, force, impulse, mass),
         }
     }
@@ -77,19 +80,14 @@ pub struct GameBuilding {
     pub half_size: f32,
 }
 impl GameBuilding {
-    pub fn of(
-        position: Vec3,
-        stories: u32,
-        half_size: f32
-    ) -> GameBuilding {
+    pub fn of(position: Vec3, stories: u32, half_size: f32) -> GameBuilding {
         GameBuilding {
             position,
             stories,
-            half_size
+            half_size,
         }
     }
 }
-
 
 #[derive(Clone, Debug, Default, Resource, Reflect, FromReflect)]
 #[reflect(Resource)]

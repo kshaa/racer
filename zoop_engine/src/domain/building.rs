@@ -1,11 +1,11 @@
 use crate::domain::game_state::*;
 use crate::domain::player::Player;
+use crate::domain::spritesheets::SpriteSheets;
+use crate::logic::math::deg2rad;
 use bevy::core::Name;
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 use bevy_sprite3d::*;
-use crate::domain::spritesheets::SpriteSheets;
-use crate::logic::math::deg2rad;
 
 #[derive(Bundle)]
 pub struct Building {
@@ -22,10 +22,7 @@ pub struct Building {
 }
 
 impl Building {
-    pub fn build(
-        spritesheets: &SpriteSheets,
-        building: GameBuilding
-    ) -> Building {
+    pub fn build(spritesheets: &SpriteSheets, building: GameBuilding) -> Building {
         Building {
             rigid_body: RigidBody::Fixed,
             collider: Collider::cuboid(building.half_size, building.half_size),

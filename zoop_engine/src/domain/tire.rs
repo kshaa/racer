@@ -1,11 +1,11 @@
 use crate::domain::game_state::GameTire;
 use crate::domain::player::Player;
+use crate::domain::spritesheets::SpriteSheets;
 use bevy::core::Name;
 use bevy::math::*;
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 use bevy_sprite3d::{Sprite3d, Sprite3dBundle, Sprite3dParams};
-use crate::domain::spritesheets::SpriteSheets;
 
 #[derive(Copy, Clone, Debug, Default, Component, Reflect, FromReflect)]
 #[reflect(Component)]
@@ -18,6 +18,7 @@ pub struct TireMeta {
 #[reflect(Component)]
 pub struct TirePhysics {
     pub angle: f32,
+    pub drift_leftover: f32,
 }
 
 #[derive(Bundle)]
@@ -101,7 +102,8 @@ impl Tire {
                 unlit: true,
                 transform: physics.entity_physics.transform,
                 ..default()
-            }.bundle(sprite_params),
+            }
+            .bundle(sprite_params),
             player,
         }
     }

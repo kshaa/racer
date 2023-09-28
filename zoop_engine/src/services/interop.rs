@@ -96,7 +96,7 @@ pub fn demo_game() {
         is_local: true,
         is_spectator: false,
     };
-    let players = vec!(player1, player2);
+    let players = vec![player1, player2];
     let config = GameConfig::default(no_network, players, canvas_selector);
     let mut game = App::new();
     build_game(&mut game, config);

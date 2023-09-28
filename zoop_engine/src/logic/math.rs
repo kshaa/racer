@@ -2,8 +2,14 @@ use nalgebra::RealField;
 
 pub fn deg2rad(degrees: f32) -> f32 {
     let pi: f32 = RealField::pi();
-    let radian = pi / 180.0;
-    degrees * radian
+    let conversion = pi / 180.0;
+    degrees * conversion
+}
+
+pub fn rad2deg(degrees: f32) -> f32 {
+    let pi: f32 = RealField::pi();
+    let conversion = 180.0 / pi;
+    degrees * conversion
 }
 
 pub fn signed(s: bool, a: f32) -> f32 {
@@ -28,7 +34,11 @@ mod tests {
 
     #[test]
     fn test_vector_rotate_by_deg() {
-        let p1 = Vec3 { x: 0.0, y: 1.0, z: 0.0 };
+        let p1 = Vec3 {
+            x: 0.0,
+            y: 1.0,
+            z: 0.0,
+        };
         let mut t1 = Transform::from_translation(p1);
         let mut t2 = t1.clone();
         t2.rotate_local_z(deg2rad(90.0));
