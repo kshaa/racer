@@ -5,6 +5,7 @@ use bevy::prelude::*;
 pub struct SpriteSheets {
     pub car: Handle<Image>,
     pub tire: Handle<Image>,
+    pub trace: Handle<Image>,
     pub debug_material: Handle<StandardMaterial>,
     pub cube: Handle<Mesh>,
 }

@@ -12,6 +12,9 @@ use bevy_sprite3d::{Sprite3d, Sprite3dBundle, Sprite3dParams};
 pub struct TireMeta {
     pub is_front: bool,
     pub is_right: bool,
+    pub position_old: Vec3,
+    pub position_older: Vec3,
+    pub last_trace: Vec3,
 }
 
 #[derive(Copy, Clone, Debug, Default, Component, Reflect, FromReflect)]
@@ -70,9 +73,16 @@ impl Tire {
     ) -> Tire {
         let front_title = if is_front { "F" } else { "B" };
         let side_title = if is_right { "R" } else { "L" };
+        let position = physics.entity_physics.transform.translation;
 
         Tire {
-            meta: TireMeta { is_front, is_right },
+            meta: TireMeta {
+                is_front,
+                is_right,
+                position_old: position.clone(),
+                position_older: position.clone(),
+                last_trace: position.clone()
+            },
             phyics: physics.tire_physics,
             name: Name::new(format!(
                 "Tire {}{} for {}",

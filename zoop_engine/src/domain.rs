@@ -17,3 +17,4 @@ pub mod room_config;
 pub mod spawn;
 pub mod spritesheets;
 pub mod tire;
+pub mod trace;

@@ -122,8 +122,10 @@ pub fn build_game(game: &mut App, config: GameConfig) {
         |asset_server: Res<AssetServer>, mut spritesheets: ResMut<SpriteSheets>| {
             let car: Handle<Image> = asset_server.load("car.png");
             let tire: Handle<Image> = asset_server.load("tire.png");
+            let trace: Handle<Image> = asset_server.load("trace.png");
             spritesheets.car = car.clone();
             spritesheets.tire = tire.clone();
+            spritesheets.trace = trace.clone();
         },
     );
 
@@ -191,6 +193,7 @@ pub fn build_game(game: &mut App, config: GameConfig) {
                 // destroy_scene,
                 // setup_scene,
                 store_car_positions.before(drive_car),
+                draw_drift_marks.before(drive_car).after(store_car_positions),
                 drive_car,
                 // The `frame_validator` relies on the execution of `apply_inputs` and must come after.
                 // It could happen anywhere else, I just stuck it here to be clear.
@@ -205,7 +208,11 @@ pub fn build_game(game: &mut App, config: GameConfig) {
         );
     } else {
         game_schedule.add_systems(
-            (store_car_positions.before(drive_car), drive_car)
+            (
+                store_car_positions.before(drive_car),
+                draw_drift_marks.before(drive_car).after(store_car_positions),
+                drive_car
+            )
                 .chain()
                 .in_base_set(GameSet::Game),
         );

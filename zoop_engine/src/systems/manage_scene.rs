@@ -145,6 +145,9 @@ pub fn setup_scene(
     if asset_server.get_load_state(&spritesheets.tire) != LoadState::Loaded {
         return;
     }
+    if asset_server.get_load_state(&spritesheets.trace) != LoadState::Loaded {
+        return;
+    }
 
     // Visual loading state logic
     next_state.set(GameReadiness::Ready);

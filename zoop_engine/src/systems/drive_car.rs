@@ -14,7 +14,10 @@ use bevy_ggrs::*;
 #[cfg(feature = "debug_lines")]
 use bevy_prototype_debug_lines::*;
 use bevy_rapier2d::prelude::*;
+use bevy_sprite3d::Sprite3dParams;
 use ggrs::InputStatus;
+use crate::domain::spritesheets::SpriteSheets;
+use crate::domain::trace::Trace;
 
 pub fn store_car_positions(
     config: Res<GameConfig>,
@@ -31,6 +34,39 @@ pub fn store_car_positions(
         let coefficient = config.camera_velocity_coefficient;
         let smoothed = (car_meta.velocity_smooth + delta * coefficient).abs();
         car_meta.velocity_smooth = smoothed;
+    }
+}
+
+pub fn draw_drift_marks(
+    mut commands: Commands,
+    config: Res<GameConfig>,
+    mut source_tire_query: Query<(&mut TireMeta, &TirePhysics, &Transform, &Player), Without<CarMeta>>,
+    spritesheets: Res<SpriteSheets>,
+    mut sprite_params: Sprite3dParams,
+) {
+    let mut tire_query = source_tire_query.iter_mut().collect::<Vec<_>>();
+    tire_query.sort_by_key(|(meta, _, _, player)| {
+        (
+            player.handle,
+            if meta.is_front { 1 } else { 0 },
+            if meta.is_right { 1 } else { 0 },
+        )
+    });
+
+    for (mut tire_meta, tire_physics, tire_transform, _) in tire_query {
+        tire_meta.position_older = tire_meta.position_old;
+        let position = tire_transform.translation;
+        tire_meta.position_old = position;
+        let delta = tire_meta.last_trace.distance(position.clone());
+        if delta > config.meters2pix(1.0) && tire_physics.drift_leftover != 0.0 {
+            tire_meta.last_trace = position;
+            commands.spawn(Trace::build(
+                &spritesheets,
+                &mut sprite_params,
+                config.pixels_per_meter,
+                tire_transform.clone()
+            ));
+        }
     }
 }
 

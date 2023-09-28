@@ -84,8 +84,8 @@ impl GameConfig {
             tire_friction_force: 0.9,
             tire_linear_damping: 5.0,
             tire_angular_damping: 0.1,
-            drift_velocity: m2p(8.0),
-            drift_loss_per_tick: 0.05 * (1.0 / (FPS as f32)),
+            drift_velocity: m2p(10.0),
+            drift_loss_per_tick: 0.5 * (1.0 / (FPS as f32)),
             camera_velocity_coefficient: 0.01,
             desync_max_frames: DESYNC_MAX_FRAMES,
         }
