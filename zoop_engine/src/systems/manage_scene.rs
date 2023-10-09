@@ -1,5 +1,6 @@
 use crate::domain::car::spawn_car;
 use bevy::asset::LoadState;
+use bevy::gltf::{Gltf, GltfMesh};
 
 
 use crate::domain::colors::{ZOOP_BLACK, ZOOP_RED, ZOOP_YELLOW};
@@ -19,6 +20,9 @@ use bevy_sprite3d::Sprite3dParams;
 
 pub fn init_scene(config: &GameConfig) -> GameState {
     println!("Initiating scene state");
+
+    let building_half_size = config.meters2pix(10.0);
+
     let mut cars = config
         .players
         .iter()
@@ -26,7 +30,7 @@ pub fn init_scene(config: &GameConfig) -> GameState {
         .map(|(handle, _)| {
             let player = Player { handle };
             let position = Vec3 {
-                x: config.car_half_size().x * 6.0 * (handle as f32),
+                x: building_half_size + config.car_half_size().x * 6.0 * (handle as f32),
                 y: 0.0,
                 z: 0.0,
             };
@@ -42,17 +46,43 @@ pub fn init_scene(config: &GameConfig) -> GameState {
         })
         .collect();
 
-    let building_half_size = config.meters2pix(5.0);
-    let building = GameEntity::Building(GameBuilding::of(
-        Vec3 {
-            x: -building_half_size * 1.5,
-            y: 0.0,
-            z: building_half_size,
-        },
-        1,
-        building_half_size,
-    ));
-    let mut buildings = vec![building];
+    let buildings: Vec<(i32, i32, u32, bool)> = vec!(
+                           (0,10, 2, false), (1,10, 1, false),(2,10, 2, false),
+                           (0, 9, 2, true),                   (2, 9, 1, false),
+                           (0, 8, 2, false),                  (2, 8, 2, false),
+        (-1, 7, 2, false), (0, 7, 2, false), (1, 7, 2, true), (2, 7, 2, false), (3, 7, 2, false), (4, 7, 2, false),
+        (-1, 6, 2, false),
+        (-1, 5, 2, false),                   (1, 5, 2, false), (2, 5, 1, false), (3, 5, 2, false),
+        (-1, 4, 2, false),                   (1, 4, 1, false),
+        (-1, 3, 1, false),                   (1, 3, 2, false),
+        (-1, 2, 2, false),                   (1, 2, 1, false),
+        (-1, 1, 1, false),                   (1, 1, 2, false),
+        (-1, 0, 2, false),                   (1, 0, 1, false),
+    );
+    fn make_building(building_half_size: f32, x: f32, y: f32, stories: u32, is_tunnel: bool) -> GameEntity {
+        GameEntity::Building(GameBuilding::of(
+            Vec3 {
+                x: building_half_size * 2.0 * x,
+                y: building_half_size * 2.0 * y,
+                z: building_half_size,
+            },
+            stories,
+            is_tunnel,
+            building_half_size,
+        ))
+    }
+
+    let mut buildings =
+        buildings
+            .iter()
+            .map(|(x, y, stories, is_tunnel)|
+                make_building(
+                    building_half_size,
+                    x.clone() as f32,
+                    y.clone() as f32,
+                    stories.clone(),
+                    is_tunnel.clone()))
+            .collect();
 
     let mut entities = vec![];
     entities.append(&mut cars);
@@ -126,17 +156,11 @@ fn uv_debug_texture() -> Image {
     )
 }
 
-pub fn setup_scene(
+pub fn await_assets(
     asset_server: Res<AssetServer>,
     mut background: ResMut<ClearColor>,
     mut next_state: ResMut<NextState<GameReadiness>>,
     spritesheets: Res<SpriteSheets>,
-    mut sprite_params: Sprite3dParams,
-    config: Res<GameConfig>,
-    state: Res<GameState>,
-    mut rip: ResMut<RollbackIdProvider>,
-    spawn_pool: Query<(Entity, &DeterministicSpawn)>,
-    mut commands: Commands,
 ) {
     // Check assets loaded
     if asset_server.get_load_state(&spritesheets.car) != LoadState::Loaded {
@@ -148,7 +172,26 @@ pub fn setup_scene(
     if asset_server.get_load_state(&spritesheets.trace) != LoadState::Loaded {
         return;
     }
+    if asset_server.get_load_state(&spritesheets.building) != LoadState::Loaded {
+        return;
+    }
 
+    next_state.set(GameReadiness::LoadingScene);
+}
+
+pub fn setup_scene(
+    gltfs: Res<Assets<Gltf>>,
+    gltf_meshes: Res<Assets<GltfMesh>>,
+    mut background: ResMut<ClearColor>,
+    mut next_state: ResMut<NextState<GameReadiness>>,
+    spritesheets: Res<SpriteSheets>,
+    mut sprite_params: Sprite3dParams,
+    config: Res<GameConfig>,
+    state: Res<GameState>,
+    mut rip: ResMut<RollbackIdProvider>,
+    spawn_pool: Query<(Entity, &DeterministicSpawn)>,
+    mut commands: Commands,
+) {
     // Visual loading state logic
     next_state.set(GameReadiness::Ready);
     background.0 = ZOOP_YELLOW;
@@ -161,6 +204,8 @@ pub fn setup_scene(
 
     spawn_scene(
         &spritesheets,
+        &gltfs,
+        &gltf_meshes,
         &mut sprite_params,
         config.as_ref(),
         &state,
@@ -172,6 +217,8 @@ pub fn setup_scene(
 
 pub fn spawn_scene(
     spritesheets: &SpriteSheets,
+    gltfs: &Assets<Gltf>,
+    gltf_meshes: &Assets<GltfMesh>,
     sprite_params: &mut Sprite3dParams,
     config: &GameConfig,
     state: &GameState,
@@ -180,6 +227,11 @@ pub fn spawn_scene(
     rip: &mut RollbackIdProvider,
 ) {
     println!("Spawning scene from state");
+    commands.insert_resource(AmbientLight {
+        color: Color::WHITE,
+        brightness: 1.0,
+    });
+
     for entity in state.entities.iter() {
         match entity {
             GameEntity::Stub() => (),
@@ -197,6 +249,8 @@ pub fn spawn_scene(
             }
             GameEntity::Building(building) => setup_building(
                 spritesheets,
+                gltfs,
+                gltf_meshes,
                 config,
                 building.clone(),
                 commands,
@@ -214,15 +268,26 @@ pub fn spawn_scene(
 
 pub fn setup_building(
     spritesheets: &SpriteSheets,
+    gltfs: &Assets<Gltf>,
+    gltf_meshes: &Assets<GltfMesh>,
     _config: &GameConfig,
     building: GameBuilding,
     commands: &mut Commands,
     spawn_pool: &mut Vec<Entity>,
     rip: &mut RollbackIdProvider,
 ) {
-    let mut entity = commands.entity(spawn_pool.pop().unwrap());
-    entity.insert(Rollback::new(rip.next_id()));
-    entity.insert(Building::build(spritesheets, building));
+    if !building.is_tunnel {
+        let mut physics_entity = commands.entity(spawn_pool.pop().unwrap());
+        physics_entity.insert(Rollback::new(rip.next_id()));
+        physics_entity.insert(Building::build(&building));
+    }
+
+    let start = if building.is_tunnel { 1 } else { 0 };
+    for story in start..building.stories {
+        let mut mesh_entity = commands.entity(spawn_pool.pop().unwrap());
+        mesh_entity.insert(Building::build_mesh(spritesheets, gltfs, gltf_meshes, &building, story));
+    }
+
 }
 
 pub fn setup_car(

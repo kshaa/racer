@@ -18,6 +18,7 @@ pub struct GameConfig {
     pub canvas_selector: Option<String>,
     pub pixels_per_meter: f32,
     pub default_camera_height: f32,
+    pub parking_camera_height: f32,
     pub car_half_width: f32,
     pub car_half_length: f32,
     pub car_radius: f32,
@@ -66,7 +67,8 @@ impl GameConfig {
             load_seconds: 1,
             canvas_selector,
             pixels_per_meter: ppm,
-            default_camera_height: m2p(40.0),
+            default_camera_height: m2p(80.0),
+            parking_camera_height: m2p(30.0),
             car_half_width: m2p(0.65),
             car_half_length: m2p(1.8),
             car_radius: 0.15,
@@ -86,7 +88,7 @@ impl GameConfig {
             tire_angular_damping: 0.1,
             drift_velocity: m2p(10.0),
             drift_loss_per_tick: 0.5 * (1.0 / (FPS as f32)),
-            camera_velocity_coefficient: 0.01,
+            camera_velocity_coefficient: 0.04,
             desync_max_frames: DESYNC_MAX_FRAMES,
         }
     }

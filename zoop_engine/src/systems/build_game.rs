@@ -1,6 +1,7 @@
 use crate::domain::car_body::CarMeta;
 
 use bevy::ecs::schedule::{LogLevel, ScheduleBuildSettings};
+use bevy::gltf::Gltf;
 use bevy::prelude::CoreSet::*;
 use bevy::prelude::*;
 use bevy_ggrs::*;
@@ -10,14 +11,17 @@ use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use bevy_prototype_debug_lines::*;
 use bevy_rapier2d::prelude::*;
 use bevy_sprite3d::{Sprite3dPlugin};
+use ggrs::InputStatus;
 use smooth_bevy_cameras::{LookTransform, LookTransformBundle, LookTransformPlugin, Smoother};
 
 use crate::domain::colors::*;
+use crate::domain::controls::*;
 use crate::domain::desync::*;
 use crate::domain::frames::*;
 use crate::domain::game_config::GameConfig;
 use crate::domain::game_readiness::GameReadiness;
 use crate::domain::game_set::GameSet;
+use crate::domain::ggrs_config::GGRSConfig;
 use crate::domain::player::Player;
 use crate::domain::spawn::*;
 use crate::domain::spritesheets::SpriteSheets;
@@ -114,7 +118,8 @@ pub fn build_game(game: &mut App, config: GameConfig) {
     let state = init_scene(&config);
     game.insert_resource(state);
     game.add_startup_system(init_materials);
-    game.add_system(setup_scene.run_if(in_state(GameReadiness::Loading)));
+    game.add_system(await_assets.run_if(in_state(GameReadiness::LoadingAssets)));
+    game.add_system(setup_scene.run_if(in_state(GameReadiness::LoadingScene)));
 
     // Define loading logic
     game.insert_resource(SpriteSheets::default());
@@ -123,9 +128,11 @@ pub fn build_game(game: &mut App, config: GameConfig) {
             let car: Handle<Image> = asset_server.load("car.png");
             let tire: Handle<Image> = asset_server.load("tire.png");
             let trace: Handle<Image> = asset_server.load("trace.png");
+            let building: Handle<Gltf> = asset_server.load("building.glb");
             spritesheets.car = car.clone();
             spritesheets.tire = tire.clone();
             spritesheets.trace = trace.clone();
+            spritesheets.building = building.clone();
         },
     );
 
@@ -283,8 +290,21 @@ fn move_camera_system(
     config: Res<GameConfig>,
     mut cameras: Query<&mut LookTransform>,
     source_car_query: Query<(&CarMeta, &Transform, &Player), Without<TireMeta>>,
+    inputs: Option<Res<PlayerInputs<GGRSConfig>>>,
+    fallback_inputs: Res<Input<KeyCode>>,
 ) {
     let following_car_index = 0;
+
+    let (game_input, _) = if config.network.is_some() {
+        inputs.as_ref().unwrap()[following_car_index]
+    } else {
+        (Controls::for_nth_player(&fallback_inputs, following_car_index), InputStatus::Confirmed)
+    };
+
+    let camera_height =
+        if (game_input.parking()) { config.parking_camera_height }
+        else { config.default_camera_height };
+
     let (position, velocity) = source_car_query
         .into_iter()
         .find(|(_, _, p)| p.handle == following_car_index)
@@ -295,7 +315,7 @@ fn move_camera_system(
     for mut c in cameras.iter_mut() {
         c.eye.x = position.x;
         c.eye.y = position.y;
-        c.eye.z = config.default_camera_height + velocity * 70.0;
+        c.eye.z = camera_height + velocity * 70.0;
         c.target = position;
     }
 }

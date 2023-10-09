@@ -77,13 +77,20 @@ impl GameTire {
 pub struct GameBuilding {
     pub position: Vec3,
     pub stories: u32,
+    pub is_tunnel: bool,
     pub half_size: f32,
 }
 impl GameBuilding {
-    pub fn of(position: Vec3, stories: u32, half_size: f32) -> GameBuilding {
+    pub fn transform(&self) -> Transform {
+        Transform::from_translation(self.position.clone())
+            .with_scale(Vec3::ONE * self.half_size)
+    }
+
+    pub fn of(position: Vec3, stories: u32, is_tunnel: bool, half_size: f32) -> GameBuilding {
         GameBuilding {
             position,
             stories,
+            is_tunnel,
             half_size,
         }
     }
