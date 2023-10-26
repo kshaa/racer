@@ -9,8 +9,12 @@ An exercise in using [Bevy](https://bevyengine.org/), [GGRS](https://github.com/
 - It's real-time multiplayer networked racing
 - Supports deterministic collisions
 - Works both natively and in a browser
-
-![Gameplay](./assets/gameplay.gif)
+  
+Latest gameplay:  
+![Gameplay 2](./assets/gameplay2.gif)  
+  
+Initial gameplay:   
+![Gameplay](./assets/gameplay.gif)  
 
 ## Lobby
 
